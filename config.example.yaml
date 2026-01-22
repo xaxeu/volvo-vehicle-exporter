@@ -4,7 +4,7 @@
 # 1. Copy this file to config.yaml
 # 2. Fill in your Volvo API credentials from https://developer.volvocars.com
 # 3. Add your vehicle VIN
-# 4. NEVER commit config.yaml to git (it's in .gitignore)
+# 4. Create account in openweathermap.org and get an API key, to store Temp and Hum on vehicle location
 
 # Volvo API Credentials
 # Get these from https://developer.volvocars.com/console/applications

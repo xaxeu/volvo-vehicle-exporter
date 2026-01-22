@@ -1,0 +1,33 @@
+# Volvo Vehicle Data Exporter Configuration
+# 
+# INSTRUCTIONS:
+# 1. Copy this file to config.yaml
+# 2. Fill in your Volvo API credentials from https://developer.volvocars.com
+# 3. Add your vehicle VIN
+# 4. NEVER commit config.yaml to git (it's in .gitignore)
+
+# Volvo API Credentials
+# Get these from https://developer.volvocars.com/console/applications
+client_id: "YOUR_CLIENT_ID_HERE"
+client_secret: "YOUR_CLIENT_SECRET_HERE"
+api_key: "YOUR_API_KEY_HERE"
+
+# OAuth2 Redirect URI (must match registered URI in Volvo developer console)
+redirect_uri: "https://YOUR_REDIRECT_URI"
+
+# Vehicle Identifier
+# Your Volvo vehicle VIN (17 character code)
+vin: "YOUR_VIN_HERE"
+
+# API Scopes - requested permissions for vehicle data access
+# Includes: fuel status, battery charge, doors/windows, locks, diagnostics, 
+# warnings, tire status, trip statistics, location, and energy data
+scope: "exve%3Abrake_status%20exve%3Adiagnostics_engine_status%20exve%3Adiagnostics_workshop%20exve%3Adoors_status%20exve%3Aengine_status%20exve%3Afuel_status%20exve%3Alock_status%20exve%3Aodometer_status%20exve%3Atyre_status%20exve%3Avehicle_statistics%20exve%3Awarnings%20exve%3Awindows_status%20vehicle%3Aattributes%20conve%3Abattery_charge_level%20conve%3Abrake_status%20conve%3Aclimatization_start_stop%20conve%3Acommand_accessibility%20conve%3Acommands%20conve%3Aconnectivity_status%20conve%3Adiagnostics_engine_status%20conve%3Adiagnostics_workshop%20conve%3Adoors_status%20conve%3Aengine_start_stop%20conve%3Aengine_status%20conve%3Aenvironment%20conve%3Afuel_status%20conve%3Ahonk_flash%20conve%3Alock%20conve%3Alock_status%20conve%3Anavigation%20conve%3Aodometer_status%20conve%3Atrip_statistics%20conve%3Atyre_status%20conve%3Aunlock%20conve%3Avehicle_relation%20conve%3Awarnings%20conve%3Awindows_status%20location%3Aread%20energy%3Acapability%3Aread%20energy%3Astate%3Aread%20openid"
+
+# Polling Configuration
+# How often to fetch vehicle data (in seconds)
+scrape_interval: 300
+
+# Optional: Weather API Key
+# For weather integration (e.g., OpenWeather API)
+weather_api_key: "YOUR_WEATHER_API_KEY_HERE"

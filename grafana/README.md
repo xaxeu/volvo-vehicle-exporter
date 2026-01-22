@@ -6,22 +6,6 @@ This folder contains Grafana dashboards to visualize Volvo vehicle telemetry dat
 
 ### 1. Start Grafana
 
-Add Grafana to your `docker-compose.yml`:
-
-```yaml
-grafana:
-  image: grafana/grafana:latest
-  container_name: grafana
-  ports:
-    - "3000:3000"
-  environment:
-    - GF_SECURITY_ADMIN_PASSWORD=admin
-  volumes:
-    - grafana_storage:/var/lib/grafana
-    - ./grafana/provisioning:/etc/grafana/provisioning
-  depends_on:
-    - prometheus
-```
 
 ### 2. Add Prometheus Data Source
 
@@ -56,6 +40,10 @@ grafana:
 - Alert indicators for warnings and diagnostics
 - Filter by vehicle attributes (VIN, model, fuel type)
 - Auto-refresh intervals
+
+## Dashboard Preview
+
+![Volvo Vehicle Metrics Dashboard](./volvo-vehicle-metrics-Volvo-Dashboards-Grafana-01-22-2026_02_44_PM.png)
 
 ## Customization
 

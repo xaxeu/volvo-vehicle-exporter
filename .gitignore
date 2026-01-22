@@ -2,6 +2,8 @@
 config.yaml
 volvo_token.json
 volvo_token.json.bak
+exporter.py.ORI
+pollers.py.ORI
 
 # Python
 __pycache__/

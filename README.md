@@ -208,4 +208,4 @@ Uses OAuth2 with PKCE (Proof Key for Code Exchange) for secure authentication wi
 
 ## Status
 
-This is an active development project for Volvo vehicle data monitoring via Prometheus.
+This is not an active development project.

@@ -20,7 +20,17 @@ volvo/
 ├── exporter.py             # Prometheus metrics exporter and data poller
 ├── config.yaml             # Configuration file with API credentials
 ├── requirements.txt        # Python dependencies
+├── Dockerfile              # Container image definition
+├── docker-compose.yml      # Docker Compose configuration
 ├── volvo_token.json        # Token storage (generated at runtime)
+├── README.md               # This file
+├── .gitignore              # Git ignore rules
+├── config.example.yaml     # Configuration template
+├── grafana/                # Grafana dashboard and provisioning
+│   ├── README.md           # Dashboard setup instructions
+│   ├── volvo-vehicle-dashboard.json # Main telemetry dashboard
+│   └── provisioning/       # Grafana provisioning files
+│       └── datasources/    # Data source configurations
 └── open-api/               # API specification files
     ├── connected-vehicle-c3-specification.*
     ├── extended-vehicle-c3-specification.*
@@ -83,12 +93,78 @@ pip install -r requirements.txt
    - Expose Prometheus metrics on `http://localhost:8000/metrics`
    - Poll vehicle data at intervals specified in `scrape_interval`
 
+## Docker Deployment
+
+### Build Docker Image
+
+```bash
+docker build -t volvo-exporter .
+```
+
+### First Time Setup (Obtain Initial Token)
+
+Run the container in interactive mode to authenticate with Volvo:
+
+```bash
+docker run -it --rm \
+  --name volvo-exporter \
+  -p 9100:9100 \
+  -v $(pwd):/app \
+  volvo-exporter
+```
+
+Then:
+1. Access the URL provided in the console
+2. Login with your Volvo Cars credentials
+3. Copy the redirected URL from your browser
+4. Paste it into the console
+5. Press `CTRL+C` to stop (token is now saved in `volvo_token.json`)
+
+### Run as Background Service
+
+Once you have the token, use Docker Compose to run as a daemon:
+
+```bash
+docker-compose up -d volvo-exporter
+```
+
+The service will:
+- Automatically refresh the token
+- Expose Prometheus metrics on `http://localhost:9100/metrics`
+- Restart automatically on failure
+- Run in the background
+
+Stop the service:
+
+```bash
+docker-compose down
+```
+
 ## Configuration
 
 Edit `config.yaml` to customize:
 - **scrape_interval** - How often to poll vehicle data (default: 300 seconds)
 - **scope** - Which API scopes to request (pre-configured with comprehensive vehicle data access)
 - Vehicle monitoring targets and API credentials
+
+Or copy from template:
+
+```bash
+cp config.example.yaml config.yaml
+# Edit with your credentials
+```
+
+## Monitoring with Grafana
+
+Visualize vehicle telemetry data with Grafana dashboards:
+
+- Real-time vehicle metrics and status
+- Battery charge and fuel level gauges
+- Door and window state monitoring
+- Tire pressure trends
+- Diagnostics and warning indicators
+
+See [grafana/README.md](grafana/README.md) for setup instructions.
 
 ## Metrics
 

@@ -1,0 +1,80 @@
+{
+  "dashboard": {
+    "title": "Volvo Vehicle Telemetry",
+    "description": "Real-time monitoring of Volvo vehicle data including battery, fuel, doors, windows, tires, and diagnostics",
+    "tags": ["volvo", "vehicle", "telemetry", "prometheus"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "vin",
+          "label": "VIN",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(volvo_vehicle_info, vin)",
+          "multi": false,
+          "includeAll": false
+        }
+      ]
+    },
+    "panels": [
+      {
+        "title": "Vehicle Status",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 4},
+        "targets": [
+          {
+            "expr": "volvo_vehicle_info{vin=\"$vin\"}"
+          }
+        ]
+      },
+      {
+        "title": "Battery Charge Level",
+        "type": "gauge",
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 4},
+        "targets": [
+          {
+            "expr": "volvo_battery_charge_level{vin=\"$vin\"}"
+          }
+        ]
+      },
+      {
+        "title": "Fuel Level",
+        "type": "gauge",
+        "gridPos": {"x": 0, "y": 4, "w": 12, "h": 4},
+        "targets": [
+          {
+            "expr": "volvo_fuel_level{vin=\"$vin\"}"
+          }
+        ]
+      },
+      {
+        "title": "Door Status",
+        "type": "table",
+        "gridPos": {"x": 12, "y": 4, "w": 12, "h": 4},
+        "targets": [
+          {
+            "expr": "volvo_door_status{vin=\"$vin\"}"
+          }
+        ]
+      },
+      {
+        "title": "Tire Pressure",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 8, "w": 24, "h": 8},
+        "targets": [
+          {
+            "expr": "volvo_tire_pressure{vin=\"$vin\"}"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -43,6 +43,7 @@ volvo/
 - **OAuth2 Authentication** - Secure authentication with PKCE flow to Volvo ID platform
 - **Multiple API Support** - Polls data from Connected Vehicle, Extended Vehicle, Energy, and Location APIs
 - **Prometheus Integration** - Exposes metrics in Prometheus format on HTTP endpoint
+- **Grafana dashboard** - Provides a Grafana dashboard with all metrics collected in Prometheus
 - **Comprehensive Metrics** - Tracks vehicle attributes (VIN, model, fuel type, battery capacity) and real-time data
 - **Error Tracking** - HTTP request metrics with status codes and duration
 - **Configurable Polling** - Adjustable scrape intervals via config
@@ -52,7 +53,7 @@ volvo/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/YOUR_USERNAME/volvo-vehicle-exporter.git
+git clone https://github.com/xaxeu/volvo-vehicle-exporter.git
 cd volvo-vehicle-exporter
 ```
 

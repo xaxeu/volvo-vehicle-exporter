@@ -177,26 +177,6 @@ The service will:
 - Restart automatically on failure
 - Run in the background
 
-Stop the service:
-
-```bash
-docker-compose down
-```
-
-## Configuration
-
-Edit `config.yaml` to customize:
-- **scrape_interval** - How often to poll vehicle data (default: 300 seconds)
-- **scope** - Which API scopes to request (pre-configured with comprehensive vehicle data access)
-- Vehicle monitoring targets and API credentials
-
-Or copy from template:
-
-```bash
-cp config.example.yaml config.yaml
-# Edit with your credentials
-```
-
 ## Monitoring with Grafana
 
 Visualize vehicle telemetry data with Grafana dashboards:

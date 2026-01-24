@@ -79,18 +79,28 @@ This is just a suggestion. Feel free to use other alternatives.
 ## Instructions to create an application on volvocars website
 
 0 - Create an account on volvocars obviously
+
 1 - Login to volvocars account: https://developer.volvocars.com/account/
+
 2 - Create new application
 ![Create App](./pictures/create_app.png)
+
 3 - That will list your app in the list. Expand it and copy VCC API key - Primary: This is the api_key to use on config.yaml
+
 4 - Select Publish
+
 5 - Fill the form and ensure you expand all scope groups and select all of them
 ![Scopes](./pictures/scopes.png)
+
 5.1 - For the Redirect URI(s) use your ngrok agent Endpoint url. You can check it on https://dashboard.ngrok.com/agents
+
 Click on the 3 dots button and select "See agent details"
 ![Agent](./pictures/agent.png)
+
 5.2 - Copy this endpoint URL as redirect_uri value on your config.yaml
+
 6 - Select Publish
+
 7 - Copy Client Id and Client Secret to config.yaml
 ![Credentials](./pictures/credentials.png)
 

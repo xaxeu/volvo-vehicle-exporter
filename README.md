@@ -112,12 +112,6 @@ Click on the 3 dots button and select "See agent details"
    - `vin` - Vehicle VIN to monitor
    - `weather_api_key` - Optional weather service integration
 
-## Dependencies
-
-- **requests** (2.31.0) - HTTP client library
-- **prometheus-client** (0.20.0) - Prometheus metrics client
-- **pyyaml** (6.0.2) - YAML configuration parser
-
 ## Usage
 
 1. **First-time Authentication**:
@@ -136,7 +130,7 @@ Click on the 3 dots button and select "See agent details"
    - Expose Prometheus metrics on `http://localhost:8000/metrics`
    - Poll vehicle data at intervals specified in `scrape_interval`
 
-## Docker Deployment
+## Docker Deployment alternative
 
 ### Build Docker Image
 

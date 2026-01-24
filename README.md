@@ -15,27 +15,35 @@ The collected data is exposed through a Prometheus-compatible HTTP endpoint for 
 ## Project Structure
 
 ```
-volvo/
 ├── auth.py                 # Volvo API authentication (OAuth2 with PKCE)
-├── exporter.py             # Prometheus metrics exporter and data poller
 ├── config.yaml             # Configuration file with API credentials
+├── config.example.yaml     # Configuration template
 ├── requirements.txt        # Python dependencies
 ├── Dockerfile              # Container image definition
 ├── docker-compose.yml      # Docker Compose configuration
+├── exporter.py             # Prometheus metrics exporter and data poller
 ├── volvo_token.json        # Token storage (generated at runtime)
+├── volvo_token.json.bak    # Backup token storage
 ├── README.md               # This file
 ├── .gitignore              # Git ignore rules
-├── config.example.yaml     # Configuration template
 ├── grafana/                # Grafana dashboard and provisioning
 │   ├── README.md           # Dashboard setup instructions
 │   ├── volvo-vehicle-dashboard.json # Main telemetry dashboard
 │   └── provisioning/       # Grafana provisioning files
 │       └── datasources/    # Data source configurations
-└── open-api/               # API specification files
-    ├── connected-vehicle-c3-specification.*
-    ├── extended-vehicle-c3-specification.*
-    ├── energy-api-specification.*
-    └── location-specification.*
+│           └── prometheus.yml
+├── open-api/               # API specification files
+│   ├── connected-vehicle-c3-specification.html
+│   ├── connected-vehicle-c3-specification.json
+│   ├── energy-api-specification.html
+│   ├── energy-api-specification.json
+│   ├── extended-vehicle-c3-specification.html
+│   ├── extended-vehicle-c3-specification.json
+│   ├── location-specification.html
+│   └── location-specification.json
+├── pictures/               # Images for README instructions
+└── prometheus/             # Prometheus configuration
+    └── prometheus.yml
 ```
 
 ## Features
@@ -62,10 +70,34 @@ cd volvo-vehicle-exporter
 pip install -r requirements.txt
 ```
 
+## Instructions to create a Redirect URI to be used on your volvocars application
+
+I tried to use my domain with Lets encrypt certificate, but for some reason Volvocars doesn't like it. 
+The alternative I found working is creating an endpoint on ngrok (https://ngrok.com/) pointing to the server hosting this exporter
+This is just a suggestion. Feel free to use other alternatives.
+
+## Instructions to create an application on volvocars website
+
+0 - Create an account on volvocars obviously
+1 - Login to volvocars account: https://developer.volvocars.com/account/
+2 - Create new application
+![Create App](./pictures/create_app.png)
+3 - That will list your app in the list. Expand it and copy VCC API key - Primary: This is the api_key to use on config.yaml
+4 - Select Publish
+5 - Fill the form and ensure you expand all scope groups and select all of them
+![Scopes](./pictures/scopes.png)
+5.1 - For the Redirect URI(s) use your ngrok agent Endpoint url. You can check it on https://dashboard.ngrok.com/agents
+Click on the 3 dots button and select "See agent details"
+![Agent](./pictures/agent.png)
+5.2 - Copy this endpoint URL as redirect_uri value on your config.yaml
+6 - Select Publish
+7 - Copy Client Id and Client Secret to config.yaml
+![Credentials](./pictures/credentials.png)
+
 3. Configure credentials in `config.yaml`:
    - `client_id` - Volvo API application ID
    - `client_secret` - Volvo API application secret
-   - `api_key` - Volvo API key
+   - `api_key` - Volvo VCC API key - Primary
    - `redirect_uri` - OAuth callback URL
    - `vin` - Vehicle VIN to monitor
    - `weather_api_key` - Optional weather service integration

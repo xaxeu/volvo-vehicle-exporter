@@ -207,17 +207,6 @@ The project includes Alertmanager for handling alerts based on Prometheus rules,
 
 2. **Alert Rules**:
    - Customize alert rules in `prometheus/alert_rules.yml`
-   - Example rule monitors if the Volvo exporter service is down:
-     ```yaml
-     - alert: VolvoExporterDown
-       expr: up{job="volvo-exporter"} == 0
-       for: 5m
-       labels:
-         severity: critical
-       annotations:
-         summary: "Volvo Exporter is down"
-         description: "Volvo Exporter has been down for more than 5 minutes."
-     ```
 
 3. **Alertmanager Access**:
    - Web UI available at `http://localhost:9093`

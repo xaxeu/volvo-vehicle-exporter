@@ -42,8 +42,11 @@ The collected data is exposed through a Prometheus-compatible HTTP endpoint for 
 │   ├── location-specification.html
 │   └── location-specification.json
 ├── pictures/               # Images for README instructions
-└── prometheus/             # Prometheus configuration
-    └── prometheus.yml
+├── prometheus/             # Prometheus configuration
+│   ├── prometheus.yml
+│   └── alert_rules.yml
+└── alertmanager/           # Alertmanager configuration
+    └── alertmanager.yml
 ```
 
 ## Features
@@ -52,6 +55,7 @@ The collected data is exposed through a Prometheus-compatible HTTP endpoint for 
 - **Multiple API Support** - Polls data from Connected Vehicle, Extended Vehicle, Energy, and Location APIs
 - **Prometheus Integration** - Exposes metrics in Prometheus format on HTTP endpoint
 - **Grafana dashboard** - Provides a Grafana dashboard with all metrics collected in Prometheus
+- **Alertmanager Notifications** - Sends alerts via Slack webhooks for vehicle issues and system monitoring
 - **Comprehensive Metrics** - Tracks vehicle attributes (VIN, model, fuel type, battery capacity) and real-time data
 - **Error Tracking** - HTTP request metrics with status codes and duration
 - **Configurable Polling** - Adjustable scrape intervals via config
@@ -127,7 +131,7 @@ Click on the 3 dots button and select "See agent details"
    The exporter will:
    - Load configuration from `config.yaml`
    - Authenticate with Volvo API
-   - Expose Prometheus metrics on `http://localhost:8000/metrics`
+   - Expose Prometheus metrics on `http://localhost:9100/metrics`
    - Poll vehicle data at intervals specified in `scrape_interval`
 
 ## Docker Deployment alternative
@@ -183,7 +187,47 @@ Visualize vehicle telemetry data with Grafana dashboards:
 
 See [grafana/README.md](grafana/README.md) for setup instructions.
 
-## Metrics
+## Alertmanager Notifications
+
+The project includes Alertmanager for handling alerts based on Prometheus rules, with notifications sent via Slack webhooks.
+
+### Features:
+- **Slack Integration** - Alerts are sent to configured Slack channels using incoming webhooks
+- **Alert Rules** - Pre-configured rules monitor vehicle exporter health and can be extended for vehicle-specific alerts
+- **Grouping and Routing** - Alerts are grouped by alert name with configurable timing for reduced noise
+- **Resolved Notifications** - Sends notifications when alerts are resolved
+
+### Configuration:
+1. **Slack Webhook Setup**:
+   - Create a Slack app at https://api.slack.com/apps
+   - Add "Incoming Webhooks" feature
+   - Create a webhook URL for your desired channel
+   - Update `alertmanager/alertmanager.yml` with your webhook URL:
+     ```yaml
+     global:
+       slack_api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK/URL'
+     ```
+
+2. **Alert Rules**:
+   - Customize alert rules in `prometheus/alert_rules.yml`
+   - Example rule monitors if the Volvo exporter service is down:
+     ```yaml
+     - alert: VolvoExporterDown
+       expr: up{job="volvo-exporter"} == 0
+       for: 5m
+       labels:
+         severity: critical
+       annotations:
+         summary: "Volvo Exporter is down"
+         description: "Volvo Exporter has been down for more than 5 minutes."
+     ```
+
+3. **Alertmanager Access**:
+   - Web UI available at `http://localhost:9093`
+   - View active alerts, silenced alerts, and alert history
+
+### Docker Deployment:
+Alertmanager is included in the Docker Compose setup and starts automatically with other services.
 
 The exporter provides:
 - **Vehicle Attributes** - VIN, model year, fuel type, gearbox, battery capacity, etc.
@@ -213,6 +257,10 @@ Uses OAuth2 with PKCE (Proof Key for Code Exchange) for secure authentication wi
 | `exporter.py` | Prometheus metrics exporter and API poller |
 | `config.yaml` | API credentials and configuration |
 | `requirements.txt` | Python package dependencies |
+| `prometheus/prometheus.yml` | Prometheus configuration with alerting |
+| `prometheus/alert_rules.yml` | Alert rules for monitoring |
+| `alertmanager/alertmanager.yml` | Alertmanager configuration for Slack notifications |
+| `grafana/volvo-vehicle-dashboard.json` | Grafana dashboard definition |
 | `open-api/` | Volvo API specification documentation |
 
 ## Notes

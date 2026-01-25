@@ -1,0 +1,31 @@
+groups:
+  - name: volvo_alerts
+    rules:
+    - alert: VolvoChargeComplete
+      expr: |
+        volvo_charge_state == 1 and on(vin) volvo_power_status == 1 and on(vin) volvo_energy_batterycharge_value >= 95
+      for: 5m
+      labels:
+        severity: info
+      annotations:
+        summary: Volvo battery almost full while charging
+        description: "The Volvo vehicle is powered on, charging, and the battery level is at or above 95%.\n"
+
+    - alert: RequestVehiclesEndpointFailed
+      expr: |
+        sum by (method, endpoint, status_code) (
+          increase(
+            http_requests_total{
+              endpoint="https://api.volvocars.com/connected-vehicle/v2/vehicles/<VIN>",
+              status_code=~"401|5.."
+            }[10m]
+          )
+        ) / 2 > 1
+      for: 5m
+      labels:
+        severity: error
+      annotations:
+        summary: "Volvo endpoints failing with error {{ $labels.status_code }}"
+        description: >
+          More than 2 requests were made in 5 minutes
+          for endpoint {{ $labels.endpoint }} with error code={{ $labels.status_code }}).        

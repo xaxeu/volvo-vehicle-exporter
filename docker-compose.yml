@@ -3,20 +3,21 @@ version: '3.8'
 volumes:
   prometheus_storage:
   grafana_storage:
+  alertmanager_storage:
 
 services:
   volvo-exporter:
-    build: .
+    image: volvo-exporter
     container_name: volvo-exporter
     ports:
       - "9100:9100"
     volumes:
       - .:/app
     environment:
-      - LOG_LEVEL=info
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=debug  # ← info, debug, silent
     restart: unless-stopped
-    stdin_open: true
-    tty: true
+    command: python3 /app/exporter.py
 
   prometheus:
     image: prom/prometheus:latest
@@ -25,6 +26,7 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml
       - prometheus_storage:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -35,6 +37,19 @@ services:
       - volvo-exporter
     restart: unless-stopped
 
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_storage:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    restart: unless-stopped
+
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -43,9 +58,6 @@ services:
     volumes:
       - grafana_storage:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
     depends_on:
       - prometheus
     restart: unless-stopped

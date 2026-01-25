@@ -5,6 +5,7 @@ import time
 import yaml
 import os
 import sys
+import re
 from datetime import datetime
 from functools import wraps
 from urllib.parse import urlparse
@@ -80,9 +81,7 @@ def sanitize_endpoint(url):
         path = parsed.path
         
         # Replace VINs (typically 17 alphanumeric characters)
-        import re
-        path = re.sub(r'/[A-HJ-NPR-Z0-9]{17}/', '/<VIN>/', path)
-        path = re.sub(r'/[A-HJ-NPR-Z0-9]{17}$', '/<VIN>', path)
+        path = re.sub(r'/[A-HJ-NPR-Z0-9]{17}(/.*)?$', '/<VIN>\1', path)
         
         # Replace UUIDs and long alphanumeric IDs
         path = re.sub(r'/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/', '/<UUID>/', path)

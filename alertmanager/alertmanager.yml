@@ -1,0 +1,22 @@
+global:
+  resolve_timeout: 5m
+  # Send messages using Slack incoming webhooks: https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks/
+  slack_api_url: 'https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX'  
+ 
+
+route:
+  group_by: ['alertname']
+  group_wait: 5s      #Specifies the amount of time to wait before sending an alert after the first alert in a group is received. In the example, alerts are sent after 30 seconds of the first alert in a group.
+  group_interval: 5m  #Specifies the amount of time to wait before sending another alert for the same group of alerts. In the example, alerts are sent every 5 minutes for the same group of alerts.
+  repeat_interval: 1s #Specifies the amount of time to wait before sending another alert for a resolved alert. In the example, alerts are sent every 12 hours for a resolved alert.
+        #  receiver: 'email'
+  receiver: 'slack-notifications'
+
+
+receivers:
+- name: 'slack-notifications'
+  slack_configs:
+  - channel: '#alerts'  # change to your channel or create this one in Slack
+    title: "{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}"
+    text: "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
+    send_resolved: true

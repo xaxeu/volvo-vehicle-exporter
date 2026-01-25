@@ -1,7 +1,7 @@
 global:
   resolve_timeout: 5m
   # Send messages using Slack incoming webhooks: https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks/
-  slack_api_url: 'https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX'  
+  slack_api_url: ''  
  
 
 route:

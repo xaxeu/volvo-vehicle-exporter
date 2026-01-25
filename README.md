@@ -74,12 +74,6 @@ cd volvo-vehicle-exporter
 pip install -r requirements.txt
 ```
 
-## Instructions to create a Redirect URI to be used on your volvocars application
-
-I tried to use my domain with Lets encrypt certificate, but for some reason Volvocars doesn't like it. 
-The alternative I found working is creating an endpoint on ngrok (https://ngrok.com/) pointing to the server hosting this exporter
-This is just a suggestion. Feel free to use other alternatives.
-
 ## Instructions to create an application on volvocars website
 
 0 - Create an account on volvocars obviously
@@ -97,6 +91,9 @@ This is just a suggestion. Feel free to use other alternatives.
 ![Scopes](./pictures/scopes.png)
 
 5.1 - For the Redirect URI(s) use your ngrok agent Endpoint url. You can check it on https://dashboard.ngrok.com/agents
+
+*Side note : I tried to use my domain with Lets encrypt certificate, but for some reason Volvocars doesn't accept it and your App never gets published.
+The alternative I found working is creating an endpoint on ngrok (https://ngrok.com/) pointing to the server hosting this exporter. This is just a suggestion. Feel free to use other alternatives.*
 
 Click on the 3 dots button and select "See agent details"
 ![Agent](./pictures/agent.png)

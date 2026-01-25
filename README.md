@@ -113,25 +113,7 @@ Click on the 3 dots button and select "See agent details"
    - `vin` - Vehicle VIN to monitor
    - `weather_api_key` - Optional weather service integration
 
-## Usage
-
-1. **First-time Authentication**:
-   ```bash
-   python auth.py
-   ```
-   This initiates the OAuth2 flow and stores the authentication token in `volvo_token.json`.
-
-2. **Start the Exporter**:
-   ```bash
-   python exporter.py
-   ```
-   The exporter will:
-   - Load configuration from `config.yaml`
-   - Authenticate with Volvo API
-   - Expose Prometheus metrics on `http://localhost:9100/metrics`
-   - Poll vehicle data at intervals specified in `scrape_interval`
-
-## Docker Deployment alternative
+## Docker Deployment
 
 ### Build Docker Image
 

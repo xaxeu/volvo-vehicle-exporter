@@ -10,7 +10,7 @@ services:
     image: volvo-exporter
     container_name: volvo-exporter
     ports:
-      - "9100:9100"
+      - "9100:9101"
     volumes:
       - .:/app
     environment:

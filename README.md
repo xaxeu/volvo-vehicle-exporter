@@ -28,10 +28,13 @@ The collected data is exposed through a Prometheus-compatible HTTP endpoint for 
 ├── .gitignore              # Git ignore rules
 ├── grafana/                # Grafana dashboard and provisioning
 │   ├── README.md           # Dashboard setup instructions
-│   ├── volvo-vehicle-dashboard.json # Main telemetry dashboard
 │   └── provisioning/       # Grafana provisioning files
-│       └── datasources/    # Data source configurations
-│           └── prometheus.yml
+│       ├── datasources/    # Data source configurations
+│       │   └── prometheus.yml
+│       └── dashboards/     # Dashboard configurations
+│           ├── volvo.yml   # Dashboard provider configuration
+│           └── volvo/      # Dashboard files
+│               └── volvo-vehicle-metrics-dashboard.json
 ├── open-api/               # API specification files
 │   ├── connected-vehicle-c3-specification.html
 │   ├── connected-vehicle-c3-specification.json
@@ -163,6 +166,7 @@ Visualize vehicle telemetry data with Grafana dashboards:
 - Door and window state monitoring
 - Tire pressure trends
 - Diagnostics and warning indicators
+- External temperature and humidity on vehicle location
 
 See [grafana/README.md](grafana/README.md) for setup instructions.
 
@@ -228,7 +232,8 @@ Uses OAuth2 with PKCE (Proof Key for Code Exchange) for secure authentication wi
 | `prometheus/prometheus.yml` | Prometheus configuration with alerting |
 | `prometheus/alert_rules.yml` | Alert rules for monitoring |
 | `alertmanager/alertmanager.yml` | Alertmanager configuration for Slack notifications |
-| `grafana/volvo-vehicle-dashboard.json` | Grafana dashboard definition |
+| `grafana/provisioning/dashboards/volvo/volvo-vehicle-metrics-dashboard.json` | Grafana dashboard definition (auto-provisioned) |
+| `grafana/provisioning/dashboards/volvo.yml` | Grafana dashboard provisioning configuration |
 | `open-api/` | Volvo API specification documentation |
 
 ## Notes
@@ -238,6 +243,4 @@ Uses OAuth2 with PKCE (Proof Key for Code Exchange) for secure authentication wi
 - Window and door states are normalized to numeric values for Prometheus
 - The application includes comprehensive HTTP request tracking for debugging
 
-## Status
 
-This is not an active development project.

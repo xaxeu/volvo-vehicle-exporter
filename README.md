@@ -157,6 +157,22 @@ The service will:
 - Restart automatically on failure
 - Run in the background
 
+The exporter provides:
+- **Vehicle Attributes** - VIN, model year, fuel type, gearbox, battery capacity, etc.
+- **Real-time Data** - Fuel levels, battery charge, door/window states, tire pressure, etc.
+- **Diagnostics** - Engine status, warnings, maintenance indicators
+- **HTTP Metrics** - Request count, duration, and status codes
+
+All metrics are labeled with vehicle attributes for easy filtering and aggregation.
+
+## Authentication Flow
+
+Uses OAuth2 with PKCE (Proof Key for Code Exchange) for secure authentication without exposing client secrets directly. The implementation:
+1. Generates a code verifier and challenge
+2. Redirects user to Volvo ID authorization
+3. Exchanges authorization code for access token
+4. Stores token locally with automatic refresh handling
+
 ## Monitoring with Grafana
 
 Visualize vehicle telemetry data with Grafana dashboards:
@@ -200,22 +216,6 @@ The project includes Alertmanager for handling alerts based on Prometheus rules,
 
 ### Docker Deployment:
 Alertmanager is included in the Docker Compose setup and starts automatically with other services.
-
-The exporter provides:
-- **Vehicle Attributes** - VIN, model year, fuel type, gearbox, battery capacity, etc.
-- **Real-time Data** - Fuel levels, battery charge, door/window states, tire pressure, etc.
-- **Diagnostics** - Engine status, warnings, maintenance indicators
-- **HTTP Metrics** - Request count, duration, and status codes
-
-All metrics are labeled with vehicle attributes for easy filtering and aggregation.
-
-## Authentication Flow
-
-Uses OAuth2 with PKCE (Proof Key for Code Exchange) for secure authentication without exposing client secrets directly. The implementation:
-1. Generates a code verifier and challenge
-2. Redirects user to Volvo ID authorization
-3. Exchanges authorization code for access token
-4. Stores token locally with automatic refresh handling
 
 ## Environment Variables
 

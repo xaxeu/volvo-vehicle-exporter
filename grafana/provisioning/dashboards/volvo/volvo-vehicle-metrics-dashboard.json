@@ -97,7 +97,7 @@
             "properties": [
               {
                 "id": "unit",
-                "value": "lengthkm"
+                "value": ""
               },
               {
                 "id": "color",
@@ -105,6 +105,10 @@
                   "fixedColor": "transparent",
                   "mode": "fixed"
                 }
+              },
+              {
+                "id": "displayName",
+                "value": "${__field.displayName} (${__field.labels.unit})"
               }
             ]
           },

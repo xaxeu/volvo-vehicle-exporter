@@ -430,16 +430,30 @@ def poll_all_metrics(api, labels):
                 status_label = data.get('status', 'UNKNOWN').upper()
                 value = safe_float(data['value'])
 
-                if metric_name not in REGISTRY._energy_metrics:
-                    REGISTRY._energy_metrics[metric_name] = Gauge(
-                        metric_name,
-                        metric_desc,
-                        LABEL_NAMES + ['status'],
-                        registry=REGISTRY,
-                    )
-                    log(f"Created energy metric: {metric_name}", 'debug')
+                # Handle electricRange with both status and unit labels
+                if key == 'electricRange':
+                    unit_label = data.get('unit', 'unknown')
+                    if metric_name not in REGISTRY._energy_metrics:
+                        REGISTRY._energy_metrics[metric_name] = Gauge(
+                            metric_name,
+                            metric_desc,
+                            LABEL_NAMES + ['status', 'unit'],
+                            registry=REGISTRY,
+                        )
+                        log(f"Created energy metric: {metric_name}", 'debug')
+                    REGISTRY._energy_metrics[metric_name].labels(**labels, status=status_label, unit=unit_label).set(value)
+                else:
+                    # Handle other energy metrics with status label
+                    if metric_name not in REGISTRY._energy_metrics:
+                        REGISTRY._energy_metrics[metric_name] = Gauge(
+                            metric_name,
+                            metric_desc,
+                            LABEL_NAMES + ['status'],
+                            registry=REGISTRY,
+                        )
+                        log(f"Created energy metric: {metric_name}", 'debug')
 
-                REGISTRY._energy_metrics[metric_name].labels(**labels, status=status_label).set(value)
+                    REGISTRY._energy_metrics[metric_name].labels(**labels, status=status_label).set(value)
 
         log(f"Energy state: {'CHARGING' if charge_state else 'IDLE'}", 'info')
     except Exception as e:

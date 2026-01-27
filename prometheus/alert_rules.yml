@@ -16,7 +16,7 @@ groups:
         sum by (method, endpoint, status_code) (
           increase(
             http_requests_total{
-              endpoint="https://api.volvocars.com/connected-vehicle/v2/vehicles/<VIN>",
+              endpoint=~"https://api.volvocars.com/connected-vehicle/v2/vehicles/<VIN>.*",
               status_code=~"401|5.."
             }[10m]
           )

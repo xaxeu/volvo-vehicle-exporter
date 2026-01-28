@@ -629,8 +629,9 @@ def main():
     vehicle_labels = get_vehicle_labels(status)
 
     create_labeled_metrics()
-    start_http_server(9101, registry=REGISTRY)
-    log("Exporter ready → http://localhost:9101/metrics", 'info')
+    listen_addr = config.get('exporter_listen_addr', '127.0.0.1')
+    start_http_server(9101, addr=listen_addr, registry=REGISTRY)
+    log(f"Exporter ready → http://{listen_addr}:9100/metrics", 'info')
     log("HTTP metrics: http_requests_total, http_request_duration_seconds", 'info')
 
     while True:

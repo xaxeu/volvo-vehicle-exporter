@@ -34,9 +34,11 @@ scope: "exve%3Abrake_status%20exve%3Adiagnostics_engine_status%20exve%3Adiagnost
 scrape_interval: 300
 
 # Exporter HTTP Server Configuration
-# Interface address to listen on (default: 127.0.0.1 for localhost only)
+# Interface address to listen on (e.g: 127.0.0.1 for localhost only)
 # Use 0.0.0.0 to allow external connections from other machines
-exporter_listen_addr: "127.0.0.1"
+exporter_listen_addr: "0.0.0.0"
+# Port to listen on (default: 9100)
+exporter_listen_port: 9100
 
 # Optional: Weather API Key
 # For weather integration (e.g., OpenWeather API)

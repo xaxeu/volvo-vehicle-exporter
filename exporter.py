@@ -630,8 +630,9 @@ def main():
 
     create_labeled_metrics()
     listen_addr = config.get('exporter_listen_addr', '127.0.0.1')
-    start_http_server(9101, addr=listen_addr, registry=REGISTRY)
-    log(f"Exporter ready → http://{listen_addr}:9100/metrics", 'info')
+    listen_port = config.get('exporter_listen_port', 9101)
+    start_http_server(listen_port, addr=listen_addr, registry=REGISTRY)
+    log(f"Exporter ready → http://{listen_addr}:{listen_port}/metrics", 'info')
     log("HTTP metrics: http_requests_total, http_request_duration_seconds", 'info')
 
     while True:

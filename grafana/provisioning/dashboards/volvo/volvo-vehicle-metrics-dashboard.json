@@ -200,7 +200,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "{__name__=~\"volvo_energy_batterycharge_value|volvo_energy_electricrange_value|weather_temperature_celsius|weather_humidity_percent\"}\r\n",
+          "expr": "(\r\n  volvo_energy_electricrange_value{unit=~\".+\"}\r\n)\r\nor\r\n(\r\n  {__name__=~\"volvo_energy_batterycharge_value|weather_temperature_celsius|weather_humidity_percent\"}\r\n)",
           "legendFormat": "{{__name__}}",
           "range": true,
           "refId": "A"

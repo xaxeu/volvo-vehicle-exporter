@@ -144,9 +144,9 @@ To enrich location metrics with human-readable addresses:
 When configured, location metrics (`volvo_location_latitude`, `volvo_location_longitude`, `volvo_location_altitude`) will include an `address` label with the formatted address:
 
 ```prometheus
-volvo_location_latitude{..., address="R Industrial 3, 3770-224 Oliveira do Bairro Municipality, Portugal"} 40.5616
-volvo_location_longitude{..., address="R Industrial 3, 3770-224 Oliveira do Bairro Municipality, Portugal"} -8.4939
-volvo_location_altitude{..., address="R Industrial 3, 3770-224 Oliveira do Bairro Municipality, Portugal"} 42
+volvo_location_latitude{..., address="123 Main Street, City, Country"} 40.7128
+volvo_location_longitude{..., address="123 Main Street, City, Country"} -74.0060
+volvo_location_altitude{..., address="123 Main Street, City, Country"} 10
 ```
 
 If the API key is not configured or the request fails, the address label will default to `"unknown"`.

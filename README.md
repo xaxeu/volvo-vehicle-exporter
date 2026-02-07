@@ -52,7 +52,7 @@ The collected data is exposed through a Prometheus-compatible HTTP endpoint for 
 ## Features
 
 - **OAuth2 Authentication** - Secure authentication with PKCE flow to Volvo ID platform
-- **Multiple API Support** - Polls data from Connected Vehicle, Extended Vehicle, Energy, and Location APIs
+- **Multiple API Support** - Polls data from Connected Vehicle, Energy, and Location APIs
 - **Prometheus Integration** - Exposes metrics in Prometheus format on HTTP endpoint
 - **Grafana dashboard** - Provides a Grafana dashboard with all metrics collected in Prometheus
 - **Alertmanager Notifications** - Sends alerts via Slack webhooks for vehicle issues and system monitoring

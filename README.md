@@ -60,6 +60,7 @@ The collected data is exposed through a Prometheus-compatible HTTP endpoint for 
 - **Error Tracking** - HTTP request metrics with status codes and duration
 - **Configurable Polling** - Adjustable scrape intervals via config
 - **Secure Token Management** - Automatic token refresh with backup preservation
+- **Reverse Geocoding** - Enriches location metrics with human-readable addresses via Geoapify API
 
 ## Installation
 
@@ -111,7 +112,44 @@ Click on the 3 dots button and select "See agent details"
    - `api_key` - Volvo VCC API key - Primary
    - `redirect_uri` - OAuth callback URL
    - `vin` - Vehicle VIN to monitor
-   - `weather_api_key` - Optional weather service integration
+   - `weather_api_key` - Optional weather service integration (OpenWeatherMap)
+   - `geoapify_api_key` - Optional reverse geocoding for location addresses (Geoapify)
+
+## Optional Integrations
+
+### Weather Data (OpenWeatherMap)
+
+To include weather data (temperature, humidity, pressure) at the vehicle's location:
+
+1. Sign up for a free account at https://openweathermap.org/
+2. Generate an API key from your account dashboard
+3. Add the API key to `config.yaml`:
+   ```yaml
+   weather_api_key: "YOUR_OPENWEATHERMAP_API_KEY"
+   ```
+
+Weather metrics will include temperature, humidity, and atmospheric pressure at the vehicle's current location.
+
+### Reverse Geocoding (Geoapify)
+
+To enrich location metrics with human-readable addresses:
+
+1. Sign up for a free account at https://www.geoapify.com/
+2. Create an API key from the dashboard (free tier includes 3,000 requests/day)
+3. Add the API key to `config.yaml`:
+   ```yaml
+   geoapify_api_key: "YOUR_GEOAPIFY_API_KEY"
+   ```
+
+When configured, location metrics (`volvo_location_latitude`, `volvo_location_longitude`, `volvo_location_altitude`) will include an `address` label with the formatted address:
+
+```prometheus
+volvo_location_latitude{..., address="123 Main Street, City, Country"} 40.7128
+volvo_location_longitude{..., address="123 Main Street, City, Country"} -74.0060
+volvo_location_altitude{..., address="123 Main Street, City, Country"} 10
+```
+
+If the API key is not configured or the request fails, the address label will default to `"unknown"`.
 
 ## Docker Deployment
 
@@ -159,6 +197,7 @@ The exporter provides:
 - **Real-time Data** - Fuel levels, battery charge, door/window states, tire pressure, etc.
 - **Diagnostics** - Engine status, warnings, maintenance indicators
 - **HTTP Metrics** - Request count, duration, and status codes
+- **Location Addresses** - Human-readable addresses from vehicle coordinates (when Geoapify API key is configured)
 
 All metrics are labeled with vehicle attributes for easy filtering and aggregation.
 

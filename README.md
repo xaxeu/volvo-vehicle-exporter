@@ -5,8 +5,7 @@ A Python-based tool that connects to Volvo's Connected Vehicle APIs to collect v
 ## Overview
 
 This project authenticates with Volvo's API platform and periodically polls for vehicle data across multiple API specifications, including:
-- **Connected Vehicle C3** - Core vehicle data (fuel, battery, doors, windows, locks, etc.)
-- **Extended Vehicle C3** - Diagnostic and status information
+- **Connected Vehicle C3** - Core vehicle data, diagnostics and status information
 - **Energy API** - EV-specific battery and charging data
 - **Location API** - Vehicle location data
 
@@ -40,8 +39,6 @@ The collected data is exposed through a Prometheus-compatible HTTP endpoint for 
 │   ├── connected-vehicle-c3-specification.json
 │   ├── energy-api-specification.html
 │   ├── energy-api-specification.json
-│   ├── extended-vehicle-c3-specification.html
-│   ├── extended-vehicle-c3-specification.json
 │   ├── location-specification.html
 │   └── location-specification.json
 ├── pictures/               # Images for README instructions

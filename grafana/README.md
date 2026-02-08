@@ -4,12 +4,16 @@ This folder contains Grafana dashboards to visualize Volvo vehicle telemetry dat
 
 Prometheus data source is provisioned automatically.
 
-Dashboard is also configurd to be provisioned automatically, but if you want to do it manually, follow these instructions:
+Dashboards are also configurd to be provisioned automatically, but if you want to do it manually, follow these instructions:
 
 ## Setup
 
 ### 1. Start Grafana
+If you already have Grafana, jump to step 2, otherwise start Grafana with:
 
+```bash
+docker-compose up -d grafana
+```
 
 ### 2. Add Prometheus Data Source
 
@@ -23,7 +27,7 @@ Dashboard is also configurd to be provisioned automatically, but if you want to 
 ### 3. Import Dashboards
 
 1. Go to **Dashboards** → **New** → **Import**
-2. Upload `volvo-vehicle-metrics-dashboard.json` from folder grafana/provisioning/dashboards/volvo
+2. Upload *.json files from folder grafana/provisioning/dashboards/volvo
 3. Select the Prometheus data source
 4. Click **Import**
 
@@ -38,6 +42,11 @@ Dashboard is also configurd to be provisioned automatically, but if you want to 
   - Location data 
   - weather info (temperature and humidity)
 
+- **volvo-vehicle-metrics-dashboard-V2.json**
+  - Changed layout and included panels with last 7 days history values
+  - Included shared tooltip to facilitate analysis between different panels
+  - Click on any data point in the graph panels and select option "Location details" to update MAP and the panel next to it, with reverse geocoding details
+
 ## Dashboard Features
 
 - Real-time vehicle metrics
@@ -46,8 +55,11 @@ Dashboard is also configurd to be provisioned automatically, but if you want to 
 - Filter by vehicle attributes (VIN, model, fuel type)
 - Auto-refresh intervals
 
-## Dashboard Preview
+## Dashboards Preview
+### Volvo Vehicle Metrics V2 Dashboard
+![Volvo Vehicle Metrics V2 Dashboard](./volvo-vehicle-metrics-dashboard-v2.png)
 
+### Volvo Vehicle Metrics V1 Dashboard
 ![Volvo Vehicle Metrics Dashboard](./volvo-vehicle-metrics-Volvo-Dashboards-Grafana-01-22-2026_02_44_PM.png)
 
 ## Customization

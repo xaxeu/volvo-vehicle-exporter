@@ -1,6 +1,8 @@
 # Volvo Vehicle Data Exporter
 
-A Python-based tool that connects to Volvo's Connected Vehicle APIs to collect vehicle telemetry and export it as Prometheus metrics.
+A Python-based tool that connects to Volvo's Connected Vehicle APIs to collect vehicle telemetry and export it as Prometheus metrics, to produce dashboards like this:
+
+![Volvo Vehicle Metrics V2 Dashboard](./grafana/volvo-vehicle-metrics-dashboard-v2.png)
 
 ## Overview
 
@@ -219,6 +221,8 @@ Visualize vehicle telemetry data with Grafana dashboards:
 - Tire pressure trends
 - Diagnostics and warning indicators
 - External temperature and humidity on vehicle location
+
+After installation, wait some time for the metrics to be displayed (depends on the time you configured for scraping: 5 min default). Give it 30 minutes.
 
 See [grafana/README.md](grafana/README.md) for setup instructions.
 

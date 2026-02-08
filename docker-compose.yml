@@ -10,7 +10,7 @@ services:
     image: volvo-exporter
     container_name: volvo-exporter
     ports:
-      - "9100:9101"
+      - "9100:9100"
     volumes:
       - .:/app
     environment:
@@ -58,6 +58,9 @@ services:
     volumes:
       - grafana_storage:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+    environment:
+      - GF_USERS_HOME_PAGE=/d/e69f30b6-8558-4423-9483-12248df7e5bc
     depends_on:
       - prometheus
     restart: unless-stopped

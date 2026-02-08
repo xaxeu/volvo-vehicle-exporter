@@ -15,4 +15,4 @@ scrape_configs:
   - job_name: 'volvo-exporter'
     static_configs:
        - targets: ['volvo-exporter:9100']    # Must match exporter_listen_port in config.yaml
-    scrape_interval: 5m
+    scrape_interval: 1m

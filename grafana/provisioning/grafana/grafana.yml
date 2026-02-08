@@ -1,0 +1,4 @@
+# Grafana configuration provisioning
+# Note: Grafana server settings are configured via environment variables in docker-compose.yml
+# The dashboard is now set as the default home dashboard via:
+# GF_SECURITY_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/volvo/volvo-vehicle-metrics-dashboard-v2.json

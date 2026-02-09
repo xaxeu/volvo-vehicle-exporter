@@ -102,19 +102,31 @@ def sanitize_endpoint(url):
 def track_http_request(func):
     """
     Decorator to track HTTP requests with Prometheus metrics.
-    Wraps requests library methods to capture metrics.
+    Wraps requests library methods to capture metrics and log payloads.
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
         method = func.__name__.upper()
         url = args[0] if args else kwargs.get('url', 'unknown')
         
+        # Sanitize URL for logging (remove API keys)
+        sanitized_url = re.sub(r'[?&]apiKey=[^&]*', '?apiKey=***', url)
+        sanitized_url = re.sub(r'[?&]appid=[^&]*', '?appid=***', sanitized_url)
+        
         start_time = time.time()
         status_code = 'unknown'
+        response_data = None
         
         try:
             response = func(*args, **kwargs)
             status_code = str(response.status_code)
+            
+            # Capture response data for logging
+            try:
+                response_data = response.json()
+            except:
+                response_data = response.text[:500]  # First 500 chars of text response
+            
             return response
         except requests.exceptions.RequestException as e:
             status_code = 'error'
@@ -137,6 +149,12 @@ def track_http_request(func):
 #            ).observe(duration)
             
             log(f"HTTP {method} {endpoint} -> {status_code} ({duration:.3f}s)", 'debug')
+            
+            # Log request/response details for external APIs when debug mode
+            if LOG_LEVEL == 'debug' and ('geoapify' in url or 'openweathermap' in url or 'volvo' in url):
+                log(f"  Request: {method} {sanitized_url}", 'debug')
+                if response_data:
+                    log(f"  Response: {response_data}", 'debug')
     
     return wrapper
 
@@ -164,10 +182,22 @@ original_session_request = requests.Session.request
 def tracked_session_request(self, method, url, **kwargs):
     start_time = time.time()
     status_code = 'unknown'
+    response_data = None
+    
+    # Sanitize URL for logging (remove API keys)
+    sanitized_url = re.sub(r'[?&]apiKey=[^&]*', '?apiKey=***', url)
+    sanitized_url = re.sub(r'[?&]appid=[^&]*', '?appid=***', sanitized_url)
     
     try:
         response = original_session_request(self, method, url, **kwargs)
         status_code = str(response.status_code)
+        
+        # Capture response data for logging
+        try:
+            response_data = response.json()
+        except:
+            response_data = response.text[:500]  # First 500 chars of text response
+        
         return response
     except requests.exceptions.RequestException as e:
         status_code = 'error'
@@ -189,6 +219,12 @@ def tracked_session_request(self, method, url, **kwargs):
 #        ).observe(duration)
         
         log(f"HTTP {method.upper()} {endpoint} -> {status_code} ({duration:.3f}s)", 'debug')
+        
+        # Log request/response details for external APIs when debug mode
+        if LOG_LEVEL == 'debug' and ('geoapify' in url or 'openweathermap' in url or 'volvo' in url):
+            log(f"  Request: {method.upper()} {sanitized_url}", 'debug')
+            if response_data:
+                log(f"  Response: {response_data}", 'debug')
 
 requests.Session.request = tracked_session_request
 

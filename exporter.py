@@ -56,6 +56,9 @@ REGISTRY = CollectorRegistry()
 # Global label names list used for all metrics and dynamic metrics
 LABEL_NAMES = ['vin', 'model', 'modelYear', 'fuelType', 'gearbox', 'upholstery', 'batteryCapacityKWH']
 
+# Cache for last known address per VIN to prevent cardinality explosion
+last_known_addresses = {}
+
 # HTTP Metrics - defined globally
 HTTP_REQUESTS_TOTAL = Counter(
     'http_requests_total',
@@ -311,9 +314,9 @@ def create_labeled_metrics():
 
     # Location
     global LOCATION_LATITUDE, LOCATION_LONGITUDE, LOCATION_ALTITUDE
-    LOCATION_LATITUDE = Gauge('volvo_location_latitude', 'Last known latitude', labels, registry=REGISTRY)
-    LOCATION_LONGITUDE = Gauge('volvo_location_longitude', 'Last known longitude', labels, registry=REGISTRY)
-    LOCATION_ALTITUDE = Gauge('volvo_location_altitude', 'Last known altitude', labels, registry=REGISTRY)
+    LOCATION_LATITUDE = Gauge('volvo_location_latitude', 'Last known latitude', labels + ['address'], registry=REGISTRY)
+    LOCATION_LONGITUDE = Gauge('volvo_location_longitude', 'Last known longitude', labels + ['address'], registry=REGISTRY)
+    LOCATION_ALTITUDE = Gauge('volvo_location_altitude', 'Last known altitude', labels + ['address'], registry=REGISTRY)
 
     # Weather from OpenWeatherMap API (uses car coordinates)
     global WEATHER_TEMP, WEATHER_FEELS_LIKE, WEATHER_TEMP_MIN, WEATHER_TEMP_MAX
@@ -577,7 +580,8 @@ def poll_all_metrics(api, labels):
             
             # Fetch address from Geoapify
             config = load_config()  # Reload for geoapify_api_key
-            address = "unknown"
+            vin = labels.get('vin', 'unknown')
+            address = last_known_addresses.get(vin, 'unknown')  # Start with cached address
             geoapify_key = config.get('geoapify_api_key')
             if geoapify_key:
                 geoapify_url = f"https://api.geoapify.com/v1/geocode/reverse?lat={lat}&lon={lon}&apiKey={geoapify_key}"
@@ -587,17 +591,20 @@ def poll_all_metrics(api, labels):
                         geoapify_data = resp.json()
                         features = geoapify_data.get('features', [])
                         if features and len(features) > 0:
-                            address = features[0].get('properties', {}).get('formatted', 'unknown')
-                            log(f"Address: {address}", 'info')
+                            new_address = features[0].get('properties', {}).get('formatted', 'unknown')
+                            if new_address != address:  # Only update if address changed
+                                address = new_address
+                                last_known_addresses[vin] = address
+                                log(f"Address updated: {address}", 'info')
                     else:
                         log(f"Geoapify API error: {resp.status_code}", 'debug')
                 except Exception as e:
                     log(f"Geoapify fetch error: {e}", 'debug')
             
-            # Set location metrics
-            LOCATION_LATITUDE.labels(**labels).set(lat)
-            LOCATION_LONGITUDE.labels(**labels).set(lon)
-            LOCATION_ALTITUDE.labels(**labels).set(alt)
+            # Set location metrics with last known address
+            LOCATION_LATITUDE.labels(**labels, address=address).set(lat)
+            LOCATION_LONGITUDE.labels(**labels, address=address).set(lon)
+            LOCATION_ALTITUDE.labels(**labels, address=address).set(alt)
             log(f"Location: {lat:.4f}, {lon:.4f}, {alt:.0f}m", 'info')
 
             # Weather API call using car coordinates

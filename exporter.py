@@ -6,6 +6,7 @@ import yaml
 import os
 import sys
 import re
+import json
 from datetime import datetime
 from functools import wraps
 from urllib.parse import urlparse
@@ -99,83 +100,8 @@ def sanitize_endpoint(url):
         log(f"Error sanitizing endpoint: {e}", 'debug')
         return url
 
-def track_http_request(func):
-    """
-    Decorator to track HTTP requests with Prometheus metrics.
-    Wraps requests library methods to capture metrics and log payloads.
-    """
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        method = func.__name__.upper()
-        url = args[0] if args else kwargs.get('url', 'unknown')
-        
-        # Sanitize URL for logging (remove API keys)
-        sanitized_url = re.sub(r'[?&]apiKey=[^&]*', '?apiKey=***', url)
-        sanitized_url = re.sub(r'[?&]appid=[^&]*', '?appid=***', sanitized_url)
-        
-        start_time = time.time()
-        status_code = 'unknown'
-        response_data = None
-        
-        try:
-            response = func(*args, **kwargs)
-            status_code = str(response.status_code)
-            
-            # Capture response data for logging
-            try:
-                response_data = response.json()
-            except:
-                response_data = response.text[:500]  # First 500 chars of text response
-            
-            return response
-        except requests.exceptions.RequestException as e:
-            status_code = 'error'
-            raise
-        finally:
-            duration = time.time() - start_time
-            endpoint = sanitize_endpoint(url)
-            
-            # Record metrics
-            HTTP_REQUESTS_TOTAL.labels(
-                method=method,
-                endpoint=endpoint,
-                status_code=status_code
-            ).inc()
-            
-#            HTTP_REQUEST_DURATION_SECONDS.labels(
-#                method=method,
-#                endpoint=endpoint,
-#                status_code=status_code
-#            ).observe(duration)
-            
-            log(f"HTTP {method} {endpoint} -> {status_code} ({duration:.3f}s)", 'debug')
-            
-            # Log request/response details for external APIs when debug mode
-            if LOG_LEVEL == 'debug' and ('geoapify' in url or 'openweathermap' in url or 'volvo' in url):
-                log(f"  Request: {method} {sanitized_url}", 'debug')
-                if response_data:
-                    log(f"  Response: {response_data}", 'debug')
-    
-    return wrapper
-
-# Monkey-patch requests library to track all HTTP calls
-original_get = requests.get
-original_post = requests.post
-original_put = requests.put
-original_delete = requests.delete
-original_patch = requests.patch
-original_head = requests.head
-original_options = requests.options
-
-requests.get = track_http_request(original_get)
-requests.post = track_http_request(original_post)
-requests.put = track_http_request(original_put)
-requests.delete = track_http_request(original_delete)
-requests.patch = track_http_request(original_patch)
-requests.head = track_http_request(original_head)
-requests.options = track_http_request(original_options)
-
-# Also patch Session methods if used
+# Monkey-patch only requests.Session.request (avoid duplicate logging)
+# All HTTP calls (requests.get, post, etc.) internally use Session.request
 original_session_request = requests.Session.request
 
 @wraps(original_session_request)
@@ -224,7 +150,13 @@ def tracked_session_request(self, method, url, **kwargs):
         if LOG_LEVEL == 'debug' and ('geoapify' in url or 'openweathermap' in url or 'volvo' in url):
             log(f"  Request: {method.upper()} {sanitized_url}", 'debug')
             if response_data:
-                log(f"  Response: {response_data}", 'debug')
+                try:
+                    if isinstance(response_data, dict):
+                        log(f"  Response: {json.dumps(response_data, indent=2)}", 'debug')
+                    else:
+                        log(f"  Response: {response_data}", 'debug')
+                except:
+                    log(f"  Response: {response_data}", 'debug')
 
 requests.Session.request = tracked_session_request
 

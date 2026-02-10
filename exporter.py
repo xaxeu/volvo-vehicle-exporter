@@ -144,7 +144,7 @@ def tracked_session_request(self, method, url, **kwargs):
         log(f"HTTP {method.upper()} {endpoint} -> {status_code} ({duration:.3f}s)", 'debug')
         
         # Log request/response details for external APIs when debug mode
-        if LOG_LEVEL == 'debug' and ('geoapify' in url or 'openweathermap' in url or 'volvo' in url):
+        if LOG_LEVEL == 'debug' and ('openweathermap' in url or 'volvo' in url):
             log(f"  Request: {method.upper()} {sanitized_url}", 'debug')
             if response_data:
                 try:

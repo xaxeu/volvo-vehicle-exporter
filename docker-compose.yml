@@ -59,8 +59,12 @@ services:
       - grafana_storage:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
       - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./config.yaml:/app/config.yaml:ro  # Mount config.yaml as read-only
+      - ./grafana/scripts:/grafana-scripts  # Mount scripts directory
     environment:
       - GF_USERS_HOME_PAGE=/d/e69f30b6-8558-4423-9483-12248df7e5bc
+      - GF_INSTALL_PLUGINS=yesoreyeram-infinity-datasource  # Install Infinity plugin
     depends_on:
       - prometheus
     restart: unless-stopped
+    entrypoint: ["/bin/bash", "/grafana-scripts/entrypoint.sh"]  # Use custom entrypoint

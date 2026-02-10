@@ -62,7 +62,7 @@ The collected data is exposed through a Prometheus-compatible HTTP endpoint for 
 - **Error Tracking** - HTTP request metrics with status codes and duration
 - **Configurable Polling** - Adjustable scrape intervals via config
 - **Secure Token Management** - Automatic token refresh with backup preservation
-- **Reverse Geocoding** - Enriches location metrics with human-readable addresses via Geoapify API
+- **Grafana Infinity Plugin** - Automatic provisioning for reverse geocoding in dashboards via Geoapify API
 
 ## Installation
 
@@ -134,24 +134,30 @@ Weather metrics will include temperature, humidity, and atmospheric pressure at 
 
 ### Reverse Geocoding (Geoapify)
 
-To enrich location metrics with human-readable addresses:
+The exporter no longer includes address labels in Prometheus metrics to avoid cardinality explosion. Instead, reverse geocoding is performed in the visualization layer using Grafana.
+
+To enable reverse geocoding in Grafana dashboards:
 
 1. Sign up for a free account at https://www.geoapify.com/
 2. Create an API key from the dashboard (free tier includes 3,000 requests/day)
 3. Add the API key to `config.yaml`:
    ```yaml
-   geoapify_api_key: "YOUR_GEOAPIFY_API_KEY"
+   geoapify_api_key: "YOUR_GEOAPIFY_API_KEY_HERE"
    ```
 
-When configured, location metrics (`volvo_location_latitude`, `volvo_location_longitude`, `volvo_location_altitude`) will include an `address` label with the formatted address:
+When configured, the Grafana Infinity plugin will be automatically provisioned with:
+- **Datasource name**: `Geoapify (Infinity)`
+- **Allowed hosts**: `api.geoapify.com`
+- **API Key**: Automatically injected from `config.yaml`
 
-```prometheus
-volvo_location_latitude{..., address="123 Main Street, City, Country"} 40.7128
-volvo_location_longitude{..., address="123 Main Street, City, Country"} -74.0060
-volvo_location_altitude{..., address="123 Main Street, City, Country"} 10
+You can then use this datasource in Grafana panels to query the Geoapify API and display human-readable addresses based on the latitude/longitude from Prometheus metrics.
+
+Example Infinity query to reverse geocode coordinates:
+```
+https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&apiKey=${apiKey}
 ```
 
-If the API key is not configured or the request fails, the address label will default to `"unknown"`.
+The coordinates can be fetched from `volvo_location_latitude` and `volvo_location_longitude` metrics.
 
 ## Docker Deployment
 
@@ -199,7 +205,7 @@ The exporter provides:
 - **Real-time Data** - Fuel levels, battery charge, door/window states, tire pressure, etc.
 - **Diagnostics** - Engine status, warnings, maintenance indicators
 - **HTTP Metrics** - Request count, duration, and status codes
-- **Location Addresses** - Human-readable addresses from vehicle coordinates (when Geoapify API key is configured)
+- **Location Coordinates** - Latitude, longitude, and altitude of vehicle position
 
 All metrics are labeled with vehicle attributes for easy filtering and aggregation.
 

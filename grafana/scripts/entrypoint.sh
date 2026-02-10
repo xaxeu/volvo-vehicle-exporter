@@ -6,7 +6,7 @@ PLACEHOLDER="YOUR_GEOAPIFY_API_KEY_HERE"
 
 # Extract geoapify_api_key from config.yaml
 # This pattern handles both quoted and unquoted values
-GEOAPIFY_KEY=$(grep -E '^geoapify_api_key:' /app/config.yaml 2>/dev/null | sed -E 's/^geoapify_api_key:[[:space:]]*["\x27]?([^"\x27#]+)["\x27]?.*/\1/' | tr -d ' ')
+GEOAPIFY_KEY=$(grep -E '^geoapify_api_key:' /app/config.yaml 2>/dev/null | sed -E 's/^geoapify_api_key:[[:space:]]*["'\'']*([^"'\''#]+)["'\'']*.*/\1/' | tr -d ' ')
 
 # If key exists and is not placeholder, create the datasource provisioning file
 if [ -n "$GEOAPIFY_KEY" ] && [ "$GEOAPIFY_KEY" != "$PLACEHOLDER" ]; then

@@ -1,11 +1,15 @@
 #!/bin/bash
 set -e
 
+# Expected placeholder value from config.example.yaml
+PLACEHOLDER="YOUR_GEOAPIFY_API_KEY_HERE"
+
 # Extract geoapify_api_key from config.yaml
-GEOAPIFY_KEY=$(grep -E '^geoapify_api_key:' /app/config.yaml | sed 's/geoapify_api_key:[[:space:]]*"\?\([^"]*\)"\?/\1/' | tr -d ' ')
+# This pattern handles both quoted and unquoted values
+GEOAPIFY_KEY=$(grep -E '^geoapify_api_key:' /app/config.yaml 2>/dev/null | sed -E 's/^geoapify_api_key:[[:space:]]*["\x27]?([^"\x27#]+)["\x27]?.*/\1/' | tr -d ' ')
 
 # If key exists and is not placeholder, create the datasource provisioning file
-if [ -n "$GEOAPIFY_KEY" ] && [ "$GEOAPIFY_KEY" != "YOUR_GEOAPIFY_API_KEY_HERE" ]; then
+if [ -n "$GEOAPIFY_KEY" ] && [ "$GEOAPIFY_KEY" != "$PLACEHOLDER" ]; then
   echo "Provisioning Infinity datasource with Geoapify API key..."
   
   # Create the infinity datasource file

@@ -44,6 +44,7 @@ exporter_listen_port: 9100
 # For weather integration (e.g., OpenWeather API)
 weather_api_key: "YOUR_WEATHER_API_KEY_HERE"
 
-# Optional: Geoapify API Key
-# For reverse geocoding vehicle location to addresses
-geoapify_api_key: "YOUR_GEOAPIFY_API_KEY_HERE"
+# Optional: Geoapify API Key (Not used by exporter)
+# This key can be used by visualization tools like Grafana for reverse geocoding
+# The exporter no longer includes address labels to prevent metric cardinality issues
+# geoapify_api_key: "YOUR_GEOAPIFY_API_KEY_HERE"

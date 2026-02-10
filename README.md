@@ -115,7 +115,6 @@ Click on the 3 dots button and select "See agent details"
    - `redirect_uri` - OAuth callback URL
    - `vin` - Vehicle VIN to monitor
    - `weather_api_key` - Optional weather service integration (OpenWeatherMap)
-   - `geoapify_api_key` - Optional reverse geocoding for location addresses (Geoapify)
 
 ## Optional Integrations
 
@@ -158,6 +157,7 @@ https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&api
 ```
 
 The coordinates can be fetched from `volvo_location_latitude` and `volvo_location_longitude` metrics.
+**Note on Reverse Geocoding**: While the exporter collects latitude, longitude, and altitude coordinates, converting these to human-readable addresses is best done in the visualization layer (e.g., Grafana) rather than in Prometheus metrics. Adding address labels to metrics causes cardinality explosion, creating new time series for every location change and negatively impacting Prometheus performance and storage. Tools like Grafana can perform reverse geocoding on-demand using the coordinate data without these drawbacks.
 
 ## Docker Deployment
 

@@ -25,214 +25,6 @@
         "type": "prometheus",
         "uid": "Prometheus"
       },
-      "description": "Click a data point to view location details. Location information is only available when the vehicle’s engine is off. If the vehicle is moving, the panel shows the last location before moving.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 33,
-            "gradientMode": "hue",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "log": 2,
-              "type": "log"
-            },
-            "showPoints": "auto",
-            "showValues": false,
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "links": [
-            {
-              "oneClick": false,
-              "title": "Location details",
-              "url": "d/e69f30b6-8558-4423-9483-12248df7e5bc/volvo-vehicle-metrics?var-click_ts=${__value.time}"
-            }
-          ],
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Trip distance"
-            },
-            "properties": [
-              {
-                "id": "custom.axisPlacement",
-                "value": "right"
-              },
-              {
-                "id": "custom.drawStyle",
-                "value": "bars"
-              },
-              {
-                "id": "unit",
-                "value": "lengthkm"
-              },
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "dark-red",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Consumption"
-            },
-            "properties": [
-              {
-                "id": "custom.axisPlacement",
-                "value": "right"
-              },
-              {
-                "id": "custom.drawStyle",
-                "value": "points"
-              },
-              {
-                "id": "unit",
-                "value": "KWh/100Km"
-              },
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "blue",
-                  "mode": "fixed"
-                }
-              },
-              {
-                "id": "custom.axisColorMode",
-                "value": "series"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 13,
-        "x": 0,
-        "y": 0
-      },
-      "id": 25,
-      "interval": "5m",
-      "options": {
-        "legend": {
-          "calcs": [
-            "mean"
-          ],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true,
-          "sortBy": "Name",
-          "sortDesc": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.3.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "editorMode": "code",
-          "expr": "increase(volvo_odometer_km[1h]) and\r\nincrease(volvo_odometer_km[1h]) < 336",
-          "instant": false,
-          "interval": "1h",
-          "legendFormat": "Trip distance",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "editorMode": "code",
-          "expr": "volvo_energy_batterycharge_value",
-          "hide": false,
-          "instant": false,
-          "interval": "",
-          "legendFormat": "Battery level",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "editorMode": "code",
-          "expr": "volvo_stats_averageenergyconsumptionautomatic_value and\r\nchanges(volvo_stats_averageenergyconsumptionautomatic_value[15m]) > 0",
-          "hide": false,
-          "instant": false,
-          "interval": "",
-          "legendFormat": "Consumption",
-          "range": true,
-          "refId": "C"
-        }
-      ],
-      "title": "Vehicle's history",
-      "transformations": [
-        {
-          "id": "joinByField",
-          "options": {}
-        }
-      ],
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Prometheus"
-      },
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -320,13 +112,32 @@
                 }
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Altitude"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "lengthm"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "transparent",
+                  "mode": "fixed"
+                }
+              }
+            ]
           }
         ]
       },
       "gridPos": {
         "h": 3,
-        "w": 11,
-        "x": 13,
+        "w": 15,
+        "x": 0,
         "y": 0
       },
       "id": 8,
@@ -356,10 +167,26 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "{__name__=~\"volvo_energy_batterycharge_value|volvo_energy_electricrange_value|weather_temperature_celsius|weather_humidity_percent\"}",
+          "exemplar": false,
+          "expr": "{__name__=~\"volvo_energy_batterycharge_value|volvo_energy_electricrange_value|weather_temperature_celsius|weather_humidity_percent\"}  @ $click_ts",
+          "instant": true,
           "legendFormat": "{{__name__}}",
-          "range": true,
+          "range": false,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "volvo_location_altitude  @ $click_ts",
+          "hide": false,
+          "instant": true,
+          "legendFormat": "Altitude",
+          "range": false,
+          "refId": "B"
         }
       ],
       "transformations": [
@@ -420,32 +247,11 @@
       "type": "stat"
     },
     {
-      "description": "",
-      "gridPos": {
-        "h": 2,
-        "w": 7,
-        "x": 13,
-        "y": 3
-      },
-      "id": 30,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "To see most recent location, click on [Reset Timestamp]( /d/${__dashboard.uid}/?var-click_ts=${__to} )",
-        "mode": "markdown"
-      },
-      "pluginVersion": "12.3.0",
-      "type": "text"
-    },
-    {
       "datasource": {
-        "type": "datasource",
-        "uid": "-- Dashboard --"
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "infinity_DS"
       },
-      "description": "",
+      "description": "It uses Geoapify to reverse geocode vehicle's location into a full address.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -467,43 +273,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "volvo_location_latitude"
-            },
-            "properties": [
-              {
-                "id": "decimals",
-                "value": 5
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "volvo_location_longitude"
-            },
-            "properties": [
-              {
-                "id": "decimals",
-                "value": 5
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Altitude"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "lengthm"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Time"
+              "options": "Time:"
             },
             "properties": [
               {
@@ -515,13 +285,12 @@
         ]
       },
       "gridPos": {
-        "h": 10,
-        "w": 4,
-        "x": 20,
-        "y": 3
+        "h": 3,
+        "w": 9,
+        "x": 15,
+        "y": 0
       },
-      "id": 29,
-      "interval": "5m",
+      "id": 31,
       "options": {
         "colorMode": "none",
         "graphMode": "none",
@@ -529,68 +298,59 @@
         "orientation": "horizontal",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "last"
-          ],
+          "calcs": [],
           "fields": "/.*/",
           "values": false
         },
         "showPercentChange": false,
-        "text": {
-          "valueSize": 20
-        },
-        "textMode": "auto",
+        "text": {},
+        "textMode": "value",
         "wideLayout": false
       },
       "pluginVersion": "12.3.0",
       "targets": [
         {
+          "columns": [],
           "datasource": {
-            "type": "datasource",
-            "uid": "-- Dashboard --"
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "infinity_DS"
           },
-          "panelId": 2,
-          "refId": "A"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "labelsToFields",
-          "options": {
-            "keepLabels": [
-              "address"
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "parser": "uql",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "json",
+          "uql": "parse-json\r\n| scope \"features\"\r\n| project \"Address:\"=\"properties.formatted\"",
+          "url": "https://api.geoapify.com/v1/geocode/reverse",
+          "url_options": {
+            "data": "",
+            "method": "GET",
+            "params": [
+              {
+                "key": "apiKey",
+                "value": "0edd93635f2e47108963c0f66ad93135"
+              },
+              {
+                "key": "lat",
+                "value": "$lat"
+              },
+              {
+                "key": "lon",
+                "value": "$long"
+              }
             ]
           }
-        },
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "includeByName": {},
-            "indexByName": {
-              "address": 0,
-              "volvo_location_altitude": 3,
-              "volvo_location_latitude": 1,
-              "volvo_location_longitude": 2
-            },
-            "renameByName": {
-              "address": "Address",
-              "volvo_location_altitude": "Altitude",
-              "volvo_location_latitude": "Latitude",
-              "volvo_location_longitude": "Longitude"
-            }
-          }
-        },
+        }
+      ],
+      "title": "Vehicle location full address",
+      "transformations": [
         {
           "id": "calculateField",
           "options": {
-            "alias": "Time",
+            "alias": "Time:",
             "binary": {
               "left": {
                 "matcher": {
@@ -598,9 +358,9 @@
                   "options": "$click_ts"
                 }
               },
-              "operator": "+",
+              "operator": "*",
               "right": {
-                "fixed": "0"
+                "fixed": "1000"
               }
             },
             "mode": "binary",
@@ -611,6 +371,214 @@
         }
       ],
       "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "Click a data point to view location details. Location information is only available when the vehicle’s engine is off. If the vehicle is moving, the panel shows the last location before moving.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 33,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "log": 2,
+              "type": "log"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "links": [
+            {
+              "oneClick": false,
+              "title": "Location details",
+              "url": "d/e69f30b6-8558-4423-9483-12248df7e5bc/volvo-vehicle-metrics?var-click_ts=${__value.time:date:seconds}"
+            }
+          ],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trip distance"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "bars"
+              },
+              {
+                "id": "unit",
+                "value": "lengthkm"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Consumption"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "points"
+              },
+              {
+                "id": "unit",
+                "value": "KWh/100Km"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.axisColorMode",
+                "value": "series"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 15,
+        "x": 0,
+        "y": 3
+      },
+      "id": 25,
+      "interval": "5m",
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "sortBy": "Name",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "increase(volvo_odometer_km[1h]) and\r\nincrease(volvo_odometer_km[1h]) < 336",
+          "instant": false,
+          "interval": "1h",
+          "legendFormat": "Trip distance",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "volvo_energy_batterycharge_value",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "legendFormat": "Battery level",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "volvo_stats_averageenergyconsumptionautomatic_value and\r\nchanges(volvo_stats_averageenergyconsumptionautomatic_value[15m]) > 0",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "legendFormat": "Consumption",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "Vehicle's history",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {}
+        }
+      ],
+      "type": "timeseries"
     },
     {
       "datasource": {
@@ -647,10 +615,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 7,
-        "x": 13,
-        "y": 5
+        "h": 11,
+        "w": 9,
+        "x": 15,
+        "y": 3
       },
       "hideTimeOverride": true,
       "id": 2,
@@ -750,12 +718,27 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "last_over_time(\r\n  {__name__=~\"volvo_location.*\"}[5m] @ ${click_ts:date:seconds}\r\n)",
+          "expr": "{__name__=~\"volvo_location_l.*\"} @ $click_ts\r\n",
           "format": "time_series",
           "instant": true,
           "legendFormat": "{{__name__}}",
           "range": false,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "{__name__=~\"volvo_location_l.*\"} @ $click_ts",
+          "format": "time_series",
+          "hide": false,
+          "instant": true,
+          "legendFormat": "{{__name__}}",
+          "range": false,
+          "refId": "B"
         }
       ],
       "timeFrom": "7d",
@@ -833,7 +816,7 @@
           "links": [
             {
               "title": "Location details",
-              "url": "d/e69f30b6-8558-4423-9483-12248df7e5bc/volvo-vehicle-metrics?var-click_ts=${__value.time}"
+              "url": "d/e69f30b6-8558-4423-9483-12248df7e5bc/volvo-vehicle-metrics?var-click_ts=${__value.time:date:seconds}"
             }
           ],
           "mappings": [],
@@ -892,9 +875,9 @@
       },
       "gridPos": {
         "h": 6,
-        "w": 13,
+        "w": 15,
         "x": 0,
-        "y": 7
+        "y": 10
       },
       "id": 20,
       "interval": "5m",
@@ -993,6 +976,27 @@
       "type": "timeseries"
     },
     {
+      "description": "",
+      "gridPos": {
+        "h": 2,
+        "w": 9,
+        "x": 15,
+        "y": 14
+      },
+      "id": 30,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "To see most recent location, click on [Reset Timestamp]( /d/${__dashboard.uid}/?var-click_ts=${__to:date:seconds} )",
+        "mode": "markdown"
+      },
+      "pluginVersion": "12.3.0",
+      "type": "text"
+    },
+    {
       "datasource": {
         "type": "prometheus",
         "uid": "Prometheus"
@@ -1016,7 +1020,7 @@
           "links": [
             {
               "title": "Location details",
-              "url": "d/e69f30b6-8558-4423-9483-12248df7e5bc/volvo-vehicle-metrics?var-click_ts=${__value.time}"
+              "url": "d/e69f30b6-8558-4423-9483-12248df7e5bc/volvo-vehicle-metrics?var-click_ts=${__value.time:date:seconds}"
             }
           ],
           "mappings": [],
@@ -1040,11 +1044,10 @@
         "h": 4,
         "w": 24,
         "x": 0,
-        "y": 13
+        "y": 16
       },
       "id": 6,
       "interval": "5m",
-      "maxDataPoints": 500,
       "options": {
         "colWidth": 0.2,
         "legend": {
@@ -1109,7 +1112,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 17
+        "y": 20
       },
       "id": 4,
       "panels": [
@@ -1155,7 +1158,7 @@
             "h": 14,
             "w": 24,
             "x": 0,
-            "y": 18
+            "y": 21
           },
           "id": 3,
           "interval": "5m",
@@ -1229,7 +1232,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 21
       },
       "id": 18,
       "panels": [
@@ -1297,7 +1300,7 @@
             "h": 11,
             "w": 24,
             "x": 0,
-            "y": 47
+            "y": 36
           },
           "id": 19,
           "interval": "5m",
@@ -1345,7 +1348,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 19
+        "y": 22
       },
       "id": 24,
       "panels": [
@@ -1467,7 +1470,7 @@
             "h": 8,
             "w": 14,
             "x": 0,
-            "y": 20
+            "y": 82
           },
           "id": 23,
           "interval": "5m",
@@ -1608,7 +1611,7 @@
             "h": 8,
             "w": 10,
             "x": 14,
-            "y": 20
+            "y": 82
           },
           "id": 16,
           "interval": "60s",
@@ -1767,7 +1770,7 @@
             "h": 6,
             "w": 24,
             "x": 0,
-            "y": 28
+            "y": 90
           },
           "id": 12,
           "interval": "5m",
@@ -1879,33 +1882,73 @@
     "list": [
       {
         "current": {
-          "text": "1770509613885",
-          "value": "1770509613885"
+          "text": "1770755490",
+          "value": "1770755490"
         },
         "hide": 2,
         "label": "click_ts",
         "name": "click_ts",
         "options": [
           {
-            "selected": true,
-            "text": "1770509613885",
-            "value": "1770509613885"
+            "selected": false,
+            "text": "1770753698",
+            "value": "1770753698"
           }
         ],
-        "query": "${__to}",
+        "query": "${__to:date:seconds}\n",
         "type": "custom"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "Prometheus"
+        },
+        "definition": "query_result(volvo_location_latitude @ $click_ts)",
+        "hide": 2,
+        "label": "Latitude",
+        "name": "lat",
+        "options": [],
+        "query": {
+          "qryType": 3,
+          "query": "query_result(volvo_location_latitude @ $click_ts)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "regex": "/}\\s+([0-9\\.]+)/",
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "Prometheus"
+        },
+        "definition": "query_result(volvo_location_longitude @ $click_ts)",
+        "hide": 2,
+        "label": "Longitude",
+        "name": "long",
+        "options": [],
+        "query": {
+          "qryType": 3,
+          "query": "query_result(volvo_location_longitude @ $click_ts)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "regex": "/}\\s+(-?[0-9\\.]+)/",
+        "type": "query"
       }
     ]
   },
   "time": {
-    "from": "now-7d",
+    "from": "now-2d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "volvo-vehicle-metrics-dashboard-v2",
+  "title": "volvo-vehicle-metrics",
   "uid": "e69f30b6-8558-4423-9483-12248df7e5bc",
-  "version": 155,
+  "version": 192,
   "weekStart": "",
   "id": null
 }

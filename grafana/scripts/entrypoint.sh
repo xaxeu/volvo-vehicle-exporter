@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# Expected placeholder value from config.example.yaml
+# Expected placeholder value from config.yaml
 PLACEHOLDER="YOUR_GEOAPIFY_API_KEY_HERE"
 
 # Extract geoapify_api_key from config.yaml
@@ -19,6 +19,7 @@ apiVersion: 1
 datasources:
   - name: Geoapify (Infinity)
     type: yesoreyeram-infinity-datasource
+    uid: infinity_DS # Unique identifier for the datasource
     access: proxy
     isDefault: false
     editable: true

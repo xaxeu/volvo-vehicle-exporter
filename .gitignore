@@ -4,6 +4,7 @@ volvo_token.json
 volvo_token.json.bak
 exporter.py.ORI
 pollers.py.ORI
+CLAUDE.md
 
 # Python
 __pycache__/
@@ -50,3 +51,4 @@ htmlcov/
 # Environment
 .env
 .env.local
+.claude

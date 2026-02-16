@@ -57,6 +57,9 @@ REGISTRY = CollectorRegistry()
 # Global label names list used for all metrics and dynamic metrics
 LABEL_NAMES = ['vin', 'model', 'modelYear', 'fuelType', 'gearbox', 'upholstery', 'batteryCapacityKWH']
 
+# Module-level cache for dynamically created metrics
+_DYNAMIC_METRICS = {}
+
 # HTTP Metrics - defined globally
 HTTP_REQUESTS_TOTAL = Counter(
     'http_requests_total',
@@ -305,7 +308,45 @@ def get_vehicle_labels(status):
         'batteryCapacityKWH': str(status.get('batteryCapacityKWH', 'unknown')),
     }
 
-def poll_all_metrics(api, labels):
+def poll_statistics(api, labels):
+    """Poll statistics endpoint - called more frequently when engine is running"""
+    try:
+        stats = api.get_vehicle_data('statistics')
+        if LOG_LEVEL == 'debug':
+            log(f"[statistics] raw keys: {list(stats.keys())}", 'debug')
+
+        for key, data in stats.items():
+            if not isinstance(data, dict) or 'value' not in data:
+                continue
+
+            metric_name = f"volvo_stats_{key.replace(' ', '_').lower()}_value"
+            metric_desc = f"Statistics {key} ({data.get('unit', 'unknown')})"
+            value = safe_float(data.get('value'))
+            unit = data.get('unit', 'unknown')
+
+            if metric_name not in _DYNAMIC_METRICS:
+                _DYNAMIC_METRICS[metric_name] = Gauge(
+                    metric_name,
+                    metric_desc,
+                    LABEL_NAMES + ['unit'],
+                    registry=REGISTRY,
+                )
+                log(f"Created stats metric: {metric_name}", 'debug')
+
+            _DYNAMIC_METRICS[metric_name].labels(
+                **labels,
+                unit=unit,
+            ).set(value)
+
+        if 'distanceToEmptyBattery' in stats and 'value' in stats['distanceToEmptyBattery']:
+            range_km = safe_float(stats['distanceToEmptyBattery']['value'])
+            VOLVO_RANGE_KM.labels(**labels).set(range_km)
+            log(f"Range: {range_km} km", 'info')
+
+    except Exception as e:
+        log(f"Stats error: {e}", 'debug')
+
+def poll_all_metrics(api, labels, config):
     log("Poll start", 'debug')
 
     # Status / battery
@@ -314,8 +355,12 @@ def poll_all_metrics(api, labels):
         battery = safe_float(status.get('batteryCapacityKWH'))
         VOLVO_BATTERY_LEVEL.labels(**labels).set(battery)
         log(f"Battery: {battery} kWh", 'info')
+    except (KeyError, ValueError, TypeError) as e:
+        log(f"Battery data parsing error: {e}", 'error')
+    except requests.exceptions.RequestException as e:
+        log(f"Battery API request failed: {e}", 'error')
     except Exception as e:
-        log(f"Battery error: {e}", 'debug')
+        log(f"Unexpected battery error: {type(e).__name__}: {e}", 'error')
 
     # Odometer with unit label
     try:
@@ -327,46 +372,6 @@ def poll_all_metrics(api, labels):
         log(f"Odometer: {odometer} {odo_unit}", 'info')
     except Exception as e:
         log(f"Odometer error: {e}", 'debug')
-
-    # Statistics – dynamic metrics + range
-    try:
-        stats = api.get_vehicle_data('statistics')
-        if LOG_LEVEL == 'debug':
-            log(f"[statistics] raw keys: {list(stats.keys())}", 'debug')
-
-        if not hasattr(REGISTRY, '_stats_metrics'):
-            REGISTRY._stats_metrics = {}
-
-        for key, data in stats.items():
-            if not isinstance(data, dict) or 'value' not in data:
-                continue
-
-            metric_name = f"volvo_stats_{key.replace(' ', '_').lower()}_value"
-            metric_desc = f"Statistics {key} ({data.get('unit', 'unknown')})"
-            value = safe_float(data.get('value'))
-            unit = data.get('unit', 'unknown')
-
-            if metric_name not in REGISTRY._stats_metrics:
-                REGISTRY._stats_metrics[metric_name] = Gauge(
-                    metric_name,
-                    metric_desc,
-                    LABEL_NAMES + ['unit'],      # timestamp removed here
-                    registry=REGISTRY,
-                )
-                log(f"Created stats metric: {metric_name}", 'debug')
-
-            REGISTRY._stats_metrics[metric_name].labels(
-                **labels,
-                unit=unit,                     # only unit label now
-            ).set(value)
-
-        if 'distanceToEmptyBattery' in stats and 'value' in stats['distanceToEmptyBattery']:
-            range_km = safe_float(stats['distanceToEmptyBattery']['value'])
-            VOLVO_RANGE_KM.labels(**labels).set(range_km)
-            log(f"Range: {range_km} km", 'info')
-
-    except Exception as e:
-        log(f"Stats error: {e}", 'debug')
 
 
     # Energy / charging – dynamic metrics
@@ -388,9 +393,6 @@ def poll_all_metrics(api, labels):
         charging_power = safe_float(energy.get('chargingPower', {}).get('value', ''))
         CHARGING_POWER.labels(**labels).set(charging_power)
 
-        if not hasattr(REGISTRY, '_energy_metrics'):
-            REGISTRY._energy_metrics = {}
-
         for key, data in energy.items():
             if isinstance(data, dict) and 'value' in data:
                 metric_name = f"volvo_energy_{key.replace('Status', '').replace('Level', '').lower()}_value"
@@ -401,19 +403,19 @@ def poll_all_metrics(api, labels):
                 # Handle electricRange with both status and unit labels
                 if key == 'electricRange':
                     unit_label = data.get('unit', 'unknown')
-                    if metric_name not in REGISTRY._energy_metrics:
-                        REGISTRY._energy_metrics[metric_name] = Gauge(
+                    if metric_name not in _DYNAMIC_METRICS:
+                        _DYNAMIC_METRICS[metric_name] = Gauge(
                             metric_name,
                             metric_desc,
                             LABEL_NAMES + ['status', 'unit'],
                             registry=REGISTRY,
                         )
                         log(f"Created energy metric: {metric_name}", 'debug')
-                    REGISTRY._energy_metrics[metric_name].labels(**labels, status=status_label, unit=unit_label).set(value)
+                    _DYNAMIC_METRICS[metric_name].labels(**labels, status=status_label, unit=unit_label).set(value)
                 else:
                     # Handle other energy metrics with status label
-                    if metric_name not in REGISTRY._energy_metrics:
-                        REGISTRY._energy_metrics[metric_name] = Gauge(
+                    if metric_name not in _DYNAMIC_METRICS:
+                        _DYNAMIC_METRICS[metric_name] = Gauge(
                             metric_name,
                             metric_desc,
                             LABEL_NAMES + ['status'],
@@ -421,17 +423,23 @@ def poll_all_metrics(api, labels):
                         )
                         log(f"Created energy metric: {metric_name}", 'debug')
 
-                    REGISTRY._energy_metrics[metric_name].labels(**labels, status=status_label).set(value)
+                    _DYNAMIC_METRICS[metric_name].labels(**labels, status=status_label).set(value)
 
         log(f"Energy state: {'CHARGING' if charge_state else 'IDLE'}", 'info')
+    except (KeyError, ValueError, TypeError) as e:
+        log(f"Energy data parsing error: {e}", 'error')
+    except requests.exceptions.RequestException as e:
+        log(f"Energy API request failed: {e}", 'error')
     except Exception as e:
-        log(f"Energy error: {e}", 'debug')
+        log(f"Unexpected energy error: {type(e).__name__}: {e}", 'error')
 
-    # Engine
+    # Engine (return status for dynamic polling frequency)
+    engine_is_running = False
     try:
         engine = api.get_vehicle_data('engine-status')
         engine_status_str = engine.get('engineStatus', {}).get('value', 'STOPPED').upper()
         engine_status = 1.0 if engine_status_str == 'RUNNING' else 0.0
+        engine_is_running = (engine_status == 1.0)
         ENGINE_STATUS.labels(**labels).set(engine_status)
         log(f"Engine: {engine_status_str}", 'info')
     except Exception as e:
@@ -550,7 +558,6 @@ def poll_all_metrics(api, labels):
             log(f"Location: {lat:.4f}, {lon:.4f}, {alt:.0f}m", 'info')
 
             # Weather API call using car coordinates
-            config = load_config()  # Reload for weather_api_key
             weather_key = config.get('weather_api_key')
             if weather_key:
                 weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={weather_key}"
@@ -570,12 +577,20 @@ def poll_all_metrics(api, labels):
                         log(f"Weather: {main.get('temp')}°C, feels {main.get('feels_like')}°C, {main.get('humidity')}% RH", 'info')
                     else:
                         log(f"Weather API error: {resp.status_code}", 'debug')
-                except Exception as e:
-                    log(f"Weather fetch error: {e}", 'debug')
+                except requests.exceptions.RequestException as e:
+                    log(f"Weather API network error: {e}", 'debug')
+                except (KeyError, ValueError, json.JSONDecodeError) as e:
+                    log(f"Weather data parsing error: {e}", 'debug')
         else:
             log("Location invalid or missing coordinates", 'debug')
+    except (KeyError, ValueError, TypeError, IndexError) as e:
+        log(f"Location data parsing error: {e}", 'error')
+    except requests.exceptions.RequestException as e:
+        log(f"Location API request failed: {e}", 'error')
     except Exception as e:
-        log(f"Location error: {e}", 'debug')
+        log(f"Unexpected location error: {type(e).__name__}: {e}", 'error')
+
+    return engine_is_running
 
 def main():
     log("Volvo Exporter v2.0 starting (with HTTP metrics)", 'info')
@@ -605,10 +620,44 @@ def main():
     log(f"Exporter ready → http://{listen_addr}:{listen_port}/metrics", 'info')
     log("HTTP metrics: http_requests_total, http_request_duration_seconds", 'info')
 
+    # Dynamic polling intervals
+    default_interval = config.get('scrape_interval', 300)
+    stats_fast_interval = 10  # Poll statistics every 10 seconds when engine is running
+
+    # Track last poll times
+    last_full_poll = 0
+    last_stats_poll = 0
+    engine_is_running = False
+
+    log(f"Polling configuration: default={default_interval}s, stats_fast={stats_fast_interval}s (when engine running)", 'info')
+
     while True:
         try:
-            poll_all_metrics(api, vehicle_labels)
-            time.sleep(config.get('scrape_interval', 60))
+            current_time = time.time()
+
+            # Full poll (all metrics except statistics)
+            if current_time - last_full_poll >= default_interval:
+                engine_is_running = poll_all_metrics(api, vehicle_labels, config)
+                last_full_poll = current_time
+
+                # Also poll statistics during full poll
+                poll_statistics(api, vehicle_labels)
+                last_stats_poll = current_time
+
+                if engine_is_running:
+                    log(f"Engine RUNNING - statistics will poll every {stats_fast_interval}s", 'info')
+                else:
+                    log(f"Engine STOPPED - statistics will poll every {default_interval}s", 'info')
+
+            # Fast statistics poll when engine is running
+            elif engine_is_running and (current_time - last_stats_poll >= stats_fast_interval):
+                log("Fast statistics poll (engine running)", 'debug')
+                poll_statistics(api, vehicle_labels)
+                last_stats_poll = current_time
+
+            # Sleep for a short time to avoid busy-waiting
+            time.sleep(1)
+
         except KeyboardInterrupt:
             log("Exiting", 'info')
             break

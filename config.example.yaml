@@ -1,50 +1,67 @@
+# ============================================================================
 # Volvo Vehicle Data Exporter Configuration
-# 
+# ============================================================================
+#
 # INSTRUCTIONS:
 # 1. Copy this file to config.yaml
 # 2. Fill in your Volvo API credentials from https://developer.volvocars.com/account/
-# 4. Optional: Create account in openweathermap.org and get an API key, to store Temp and Hum on vehicle location
+# 3. Optional: Add weather_api_key for temperature/humidity at vehicle location
 
+# ============================================================================
 # Volvo API Credentials
 # Get these from https://developer.volvocars.com/account/
+# ============================================================================
+
 client_id: "YOUR_CLIENT_ID_HERE"
 client_secret: "YOUR_CLIENT_SECRET_HERE"
 api_key: "YOUR_API_KEY_HERE"
 
-# OAuth2 Redirect URI (must match registered URI in Volvocars application)
-# This URL need to be url encoded. Ask your favorite LLM to encode your url if needed.
-# Example: https://YOUR_REDIRECT_URI becomes https%3A%2F%2FYOUR_REDIRECT_URI
+# ============================================================================
+# OAuth2 Configuration
+# ============================================================================
+
+# Redirect URI (must match registered URI in your Volvo application)
+# NOTE: This value must be URL-encoded
+# Example: https://example.com/callback becomes https%3A%2F%2Fexample.com%2Fcallback
 redirect_uri: "YOUR_URL_ENCODED_REDIRECT_URI_HERE"
 
-# This parameter is optional. 
-# Vehicle Identifier
-# Your Volvo vehicle VIN (17 character code)
-vin: "YOUR_VIN_HERE"
-
-# API Scopes - requested permissions for vehicle data access
-# Includes: fuel status, battery charge, doors/windows, locks, diagnostics, 
-# warnings, tire status, trip statistics, location, and energy data
-# Ensure you selected all scopes in your Volvocars application, otherwise use the sopes you selected for you application.
-# Scopes need to be url encdoded. Ask your favorite LLM to encode your scopes if needed.
+# API Scopes (requested permissions for vehicle data access)
+# NOTE: This value must be URL-encoded and match scopes selected in your Volvo application
+# Includes: fuel status, battery, doors/windows, locks, diagnostics, warnings, tires,
+# trip statistics, location, and energy data
 # Example: "exve:brake_status exve:diagnostics_engine_status" becomes "exve%3Abrake_status%20exve%3Adiagnostics_engine_status"
 scope: "exve%3Abrake_status%20exve%3Adiagnostics_engine_status%20exve%3Adiagnostics_workshop%20exve%3Adoors_status%20exve%3Aengine_status%20exve%3Afuel_status%20exve%3Alock_status%20exve%3Aodometer_status%20exve%3Atyre_status%20exve%3Avehicle_statistics%20exve%3Awarnings%20exve%3Awindows_status%20vehicle%3Aattributes%20conve%3Abattery_charge_level%20conve%3Abrake_status%20conve%3Aclimatization_start_stop%20conve%3Acommand_accessibility%20conve%3Acommands%20conve%3Aconnectivity_status%20conve%3Adiagnostics_engine_status%20conve%3Adiagnostics_workshop%20conve%3Adoors_status%20conve%3Aengine_start_stop%20conve%3Aengine_status%20conve%3Aenvironment%20conve%3Afuel_status%20conve%3Ahonk_flash%20conve%3Alock%20conve%3Alock_status%20conve%3Anavigation%20conve%3Aodometer_status%20conve%3Atrip_statistics%20conve%3Atyre_status%20conve%3Aunlock%20conve%3Avehicle_relation%20conve%3Awarnings%20conve%3Awindows_status%20location%3Aread%20energy%3Acapability%3Aread%20energy%3Astate%3Aread%20openid"
 
-# Polling Configuration
+# ============================================================================
+# Vehicle Configuration
+# ============================================================================
+
+# Vehicle Identifier (optional - will auto-detect if not specified)
+# vin: "YOUR_17_CHARACTER_VIN_HERE"
+
+# ============================================================================
+# Exporter Configuration
+# ============================================================================
+
 # How often to fetch vehicle data (in seconds)
+# Default: 300 seconds (5 minutes)
+# Note: Statistics polling frequency adjusts automatically based on engine status
 scrape_interval: 300
 
-# Exporter HTTP Server Configuration
-# Interface address to listen on (e.g: 127.0.0.1 for localhost only)
-# Use 0.0.0.0 to allow external connections from other machines
+# HTTP server binding
+# Use 0.0.0.0 to allow external connections, 127.0.0.1 for localhost only
 exporter_listen_addr: "0.0.0.0"
-# Port to listen on (default: 9100)
 exporter_listen_port: 9100
 
-# Optional: Weather API Key
-# For weather integration (e.g., OpenWeather API)
-weather_api_key: "YOUR_WEATHER_API_KEY_HERE"
+# ============================================================================
+# Optional: External APIs
+# ============================================================================
 
-# Optional: Geoapify API Key (Not used by exporter)
-# This key can be used by visualization tools like Grafana for reverse geocoding
-# The exporter no longer includes address labels to prevent metric cardinality issues
+# OpenWeatherMap API key for weather data at vehicle location
+# Get your key at: https://openweathermap.org/api
+# weather_api_key: "YOUR_WEATHER_API_KEY_HERE"
+
+# Geoapify API key for reverse geocoding in Grafana dashboards
+# Get your key at: https://www.geoapify.com/
+# Note: This is used by Grafana for on-demand reverse geocoding, not by the exporter
 # geoapify_api_key: "YOUR_GEOAPIFY_API_KEY_HERE"

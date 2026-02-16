@@ -2,6 +2,7 @@ import requests
 import json
 import yaml
 import urllib.parse
+from urllib.parse import urlparse, parse_qs
 from pathlib import Path
 from typing import Dict, Optional, List
 import time
@@ -21,6 +22,20 @@ def log(msg, level='info'):
 
 
 class VolvoAuth:
+    # OAuth2 endpoints
+    AUTH_URL = "https://volvoid.eu.volvocars.com/as/authorization.oauth2"
+    TOKEN_URL = "https://volvoid.eu.volvocars.com/as/token.oauth2"
+
+    # API Base URLs
+    BASE_URL_CONNECTED_VEHICLE = "https://api.volvocars.com/connected-vehicle/v2"
+    BASE_URL_ENERGY = "https://api.volvocars.com/energy/v2"
+    BASE_URL_LOCATION = "https://api.volvocars.com/location/v1"
+
+    # API constants
+    PKCE_VERIFIER_LENGTH = 128
+    TOKEN_EXPIRY_SAFETY_MARGIN_SECONDS = 60
+    REQUEST_TIMEOUT_SECONDS = 10
+
     def __init__(self, config_path: str = "config.yaml"):
         self.config = self._load_config(config_path)
         self.session = requests.Session()
@@ -30,9 +45,9 @@ class VolvoAuth:
             'Content-Type': 'application/json',
         })
         self.token_file = Path("volvo_token.json")
-        self.auth_url = "https://volvoid.eu.volvocars.com/as/authorization.oauth2"
-        self.token_url = "https://volvoid.eu.volvocars.com/as/token.oauth2"
-        self.code_verifier = secrets.token_urlsafe(64)[:128]
+        self.auth_url = self.AUTH_URL
+        self.token_url = self.TOKEN_URL
+        self.code_verifier = secrets.token_urlsafe(64)[:self.PKCE_VERIFIER_LENGTH]
         self.code_challenge = self._pkce_challenge()
         self.state = secrets.token_urlsafe(32)
 
@@ -41,10 +56,25 @@ class VolvoAuth:
         return base64.urlsafe_b64encode(digest).decode('ascii').rstrip('=')
 
     def _load_config(self, config_path: str) -> Dict:
-        with open(config_path, 'r') as f:
-            return yaml.safe_load(f)
+        """Load and validate configuration file."""
+        try:
+            with open(config_path, 'r') as f:
+                config = yaml.safe_load(f)
 
-    def invalidate_token(self):
+            # Validate required fields
+            required_fields = ['client_id', 'client_secret', 'api_key', 'redirect_uri', 'scope']
+            missing_fields = [field for field in required_fields if not config.get(field)]
+
+            if missing_fields:
+                raise ValueError(f"Missing required configuration fields: {', '.join(missing_fields)}")
+
+            return config
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Configuration file not found: {config_path}")
+        except yaml.YAMLError as e:
+            raise ValueError(f"Invalid YAML in configuration file: {e}")
+
+    def invalidate_token(self) -> None:
         """SAFELY backup token instead of delete"""
         if self.token_file.exists():
             backup = self.token_file.with_suffix('.json.bak')
@@ -71,9 +101,13 @@ class VolvoAuth:
             self.invalidate_token()
         return None
 
-    def save_token(self, token_data: Dict):
+    def save_token(self, token_data: Dict) -> None:
         """Always use NEW refresh_token from API response"""
-        token_data['expires_at'] = time.time() + token_data['expires_in'] - 60
+        token_data['expires_at'] = (
+            time.time() +
+            token_data['expires_in'] -
+            self.TOKEN_EXPIRY_SAFETY_MARGIN_SECONDS
+        )
         self.token_file.write_text(json.dumps(token_data, indent=2))
         self.session.headers['Authorization'] = f"Bearer {token_data['access_token']}"
         log("Token saved (new refresh_token stored)")
@@ -101,7 +135,7 @@ class VolvoAuth:
                 self.token_url,
                 data=refresh_data,
                 headers={'Content-Type': 'application/x-www-form-urlencoded'},
-                timeout=10,
+                timeout=self.REQUEST_TIMEOUT_SECONDS,
             )
 
             if response.status_code == 200:
@@ -116,14 +150,17 @@ class VolvoAuth:
                 self.invalidate_token()
             return False
 
-        except requests.exceptions.ConnectionError as e:
-            # Your observed error: ('Connection aborted.', RemoteDisconnected(...))
+        except requests.exceptions.RequestException as e:
+            # Catch all requests-related errors (includes ConnectionError, Timeout, etc.)
             log(f"Network error during refresh: {e}", 'error')
-            # Do not invalidate token; let caller retry later
+            # Do not invalidate token on transient network errors
             return False
-
-        except Exception as e:
-            log(f"Unexpected refresh error: {e}", 'error')
+        except json.JSONDecodeError as e:
+            log(f"Invalid JSON response during refresh: {e}", 'error')
+            # Invalid response might indicate API changes
+            return False
+        except KeyError as e:
+            log(f"Missing expected field in token response: {e}", 'error')
             self.invalidate_token()
             return False
 
@@ -161,12 +198,13 @@ class VolvoAuth:
             log("State mismatch", 'error')
             return False
 
-        code = None
-        if 'code=' in callback_url:
-            code = callback_url.split('code=')[1].split('&')[0].split('#')[0]
+        # Parse URL properly using urllib.parse
+        parsed_url = urlparse(callback_url)
+        query_params = parse_qs(parsed_url.query)
 
+        code = query_params.get('code', [None])[0]
         if not code or len(code) < 10:
-            log("Invalid code", 'error')
+            log("Invalid or missing authorization code", 'error')
             return False
 
         log("Exchanging code + verifier + secret")
@@ -183,7 +221,7 @@ class VolvoAuth:
             self.token_url,
             data=token_data,
             headers={'Content-Type': 'application/x-www-form-urlencoded'},
-            timeout=10,
+            timeout=self.REQUEST_TIMEOUT_SECONDS,
         )
 
         if response.status_code == 200:
@@ -203,21 +241,14 @@ class VolvoAuth:
             'Authorization': self.session.headers.get('Authorization'),
             'vcc-api-operationId': 'exporter-list-vehicles',
         }
-    
-        if LOG_LEVEL == 'debug':
-            log(f"[request] vehicle_list GET {url} headers={{'Vcc-Api-Key': '***', 'Authorization': '***'}}", 'debug')
-    
-        response = self.session.get(url, headers=headers, timeout=10)
-    
-        if LOG_LEVEL == 'debug':
-            body_preview = response.text[:1000]
-            log(f"[response] vehicle_list {response.status_code} body={body_preview}", 'debug')
+
+        response = self.session.get(url, headers=headers, timeout=self.REQUEST_TIMEOUT_SECONDS)
     
         if response.status_code == 401:
             log("401 on vehicle list - attempting refresh", 'warning')
             if self.safe_refresh():
                 headers['Authorization'] = self.session.headers.get('Authorization')
-                response = self.session.get(url, headers=headers, timeout=10)
+                response = self.session.get(url, headers=headers, timeout=self.REQUEST_TIMEOUT_SECONDS)
                 log(f"Vehicle list retry: {response.status_code}", 'warning')
     
         if response.status_code != 200:
@@ -233,25 +264,24 @@ class VolvoAuth:
         if not self.vin:
             log("No VIN selected", 'error')
             return {}
-    
+
+        # Define endpoint patterns using base URL constants
         endpoint_map = {
-            'vehicles': "https://api.volvocars.com/connected-vehicle/v2/vehicles",
-            'status': f"https://api.volvocars.com/connected-vehicle/v2/vehicles/{self.vin}",
-            'statistics': f"https://api.volvocars.com/connected-vehicle/v2/vehicles/{self.vin}/statistics",
-            'energy': f"https://api.volvocars.com/energy/v2/vehicles/{self.vin}/state",
-            'odometer': f"https://api.volvocars.com/connected-vehicle/v2/vehicles/{self.vin}/odometer",
-            'engine-status': f"https://api.volvocars.com/connected-vehicle/v2/vehicles/{self.vin}/engine-status",
-            'warnings': f"https://api.volvocars.com/connected-vehicle/v2/vehicles/{self.vin}/warnings",
-            'tyres': f"https://api.volvocars.com/connected-vehicle/v2/vehicles/{self.vin}/tyres",
-            'diagnostics': f"https://api.volvocars.com/connected-vehicle/v2/vehicles/{self.vin}/diagnostics",
-            'location': f"https://api.volvocars.com/location/v1/vehicles/{self.vin}/location",
-             # 'doors': f"https://api.volvocars.com/connected-vehicle/v2/vehicles/{self.vin}/doors",
-             # 'windows': f"https://api.volvocars.com/connected-vehicle/v2/vehicles/{self.vin}/windows",
+            'vehicles': f"{self.BASE_URL_CONNECTED_VEHICLE}/vehicles",
+            'status': f"{self.BASE_URL_CONNECTED_VEHICLE}/vehicles/{self.vin}",
+            'statistics': f"{self.BASE_URL_CONNECTED_VEHICLE}/vehicles/{self.vin}/statistics",
+            'energy': f"{self.BASE_URL_ENERGY}/vehicles/{self.vin}/state",
+            'odometer': f"{self.BASE_URL_CONNECTED_VEHICLE}/vehicles/{self.vin}/odometer",
+            'engine-status': f"{self.BASE_URL_CONNECTED_VEHICLE}/vehicles/{self.vin}/engine-status",
+            'warnings': f"{self.BASE_URL_CONNECTED_VEHICLE}/vehicles/{self.vin}/warnings",
+            'tyres': f"{self.BASE_URL_CONNECTED_VEHICLE}/vehicles/{self.vin}/tyres",
+            'diagnostics': f"{self.BASE_URL_CONNECTED_VEHICLE}/vehicles/{self.vin}/diagnostics",
+            'location': f"{self.BASE_URL_LOCATION}/vehicles/{self.vin}/location",
         }
-    
+
         url = endpoint_map.get(
             endpoint,
-            f"https://api.volvocars.com/connected-vehicle/v2/vehicles/{self.vin}/{endpoint}",
+            f"{self.BASE_URL_CONNECTED_VEHICLE}/vehicles/{self.vin}/{endpoint}",
         )
         headers = {
             'Accept': 'application/json;q=0.9,text/plain',
@@ -259,21 +289,14 @@ class VolvoAuth:
             'Authorization': self.session.headers.get('Authorization'),
             'vcc-api-operationId': f"exporter-poll-{endpoint}",
         }
-    
-        if LOG_LEVEL == 'debug':
-            log(f"[request] {endpoint} GET {url} headers={{'Vcc-Api-Key': '***', 'Authorization': '***'}}", 'debug')
-    
-        response = self.session.get(url, headers=headers, timeout=10)
-    
-        if LOG_LEVEL == 'debug':
-            body_preview = response.text[:2000]
-            log(f"[response] {endpoint} {response.status_code} body={body_preview}", 'debug')
+
+        response = self.session.get(url, headers=headers, timeout=self.REQUEST_TIMEOUT_SECONDS)
     
         if response.status_code == 401:
             log(f"401 detected on {endpoint} - attempting refresh", 'warning')
             if self.safe_refresh():
                 headers['Authorization'] = self.session.headers.get('Authorization')
-                response = self.session.get(url, headers=headers, timeout=10)
+                response = self.session.get(url, headers=headers, timeout=self.REQUEST_TIMEOUT_SECONDS)
                 log(f"Retry [{endpoint}]: {response.status_code}", 'warning')
     
         if response.status_code != 200:

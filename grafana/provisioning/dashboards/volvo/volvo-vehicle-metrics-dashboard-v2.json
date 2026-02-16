@@ -18,6 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 2,
+  "id": null,
   "links": [],
   "panels": [
     {
@@ -156,6 +157,7 @@
           "values": false
         },
         "showPercentChange": false,
+        "text": {},
         "textMode": "value_and_name",
         "wideLayout": true
       },
@@ -863,11 +865,32 @@
             },
             "properties": [
               {
-                "id": "color",
-                "value": {
-                  "fixedColor": "blue",
-                  "mode": "fixed"
-                }
+                "id": "custom.axisColorMode",
+                "value": "series"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Altitude"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "points"
+              },
+              {
+                "id": "unit",
+                "value": "lengthm"
+              },
+              {
+                "id": "custom.axisColorMode",
+                "value": "series"
               }
             ]
           }
@@ -883,9 +906,7 @@
       "interval": "5m",
       "options": {
         "legend": {
-          "calcs": [
-            "last"
-          ],
+          "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
@@ -904,7 +925,7 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "\r\n{__name__=~\"weather_humidity_percent|weather_temperature_celsius\"}\r\n",
+          "expr": "\r\n{__name__=~\"weather_humidity_percent|weather_temperature_celsius|volvo_location_altitude\"}\r\n",
           "legendFormat": "{{__name__}}",
           "range": true,
           "refId": "A"
@@ -966,6 +987,7 @@
               "volvo_energy_chargingpower_value": "Charging power",
               "volvo_energy_electricrange_value": "Autonomy",
               "volvo_energy_estimatedchargingtimetotargetbatterycharge_value": "Estimated time to full",
+              "volvo_location_altitude": "Altitude",
               "weather_humidity_percent": "",
               "weather_temperature_celsius": ""
             }
@@ -1158,7 +1180,7 @@
             "h": 14,
             "w": 24,
             "x": 0,
-            "y": 21
+            "y": 52
           },
           "id": 3,
           "interval": "5m",
@@ -1297,17 +1319,18 @@
             "overrides": []
           },
           "gridPos": {
-            "h": 11,
+            "h": 8,
             "w": 24,
             "x": 0,
-            "y": 36
+            "y": 22
           },
           "id": 19,
           "interval": "5m",
           "options": {
             "legend": {
               "calcs": [
-                "last"
+                "last",
+                "sum"
               ],
               "displayMode": "table",
               "placement": "right",
@@ -1470,7 +1493,7 @@
             "h": 8,
             "w": 14,
             "x": 0,
-            "y": 82
+            "y": 127
           },
           "id": 23,
           "interval": "5m",
@@ -1611,7 +1634,7 @@
             "h": 8,
             "w": 10,
             "x": 14,
-            "y": 82
+            "y": 127
           },
           "id": 16,
           "interval": "60s",
@@ -1770,7 +1793,7 @@
             "h": 6,
             "w": 24,
             "x": 0,
-            "y": 90
+            "y": 135
           },
           "id": 12,
           "interval": "5m",
@@ -1882,17 +1905,17 @@
     "list": [
       {
         "current": {
-          "text": "1770755490",
-          "value": "1770755490"
+          "text": "1771253016",
+          "value": "1771253016"
         },
         "hide": 2,
         "label": "click_ts",
         "name": "click_ts",
         "options": [
           {
-            "selected": false,
-            "text": "1770753698",
-            "value": "1770753698"
+            "selected": true,
+            "text": "1771253016",
+            "value": "1771253016"
           }
         ],
         "query": "${__to:date:seconds}\n",
@@ -1948,7 +1971,6 @@
   "timezone": "",
   "title": "volvo-vehicle-metrics",
   "uid": "e69f30b6-8558-4423-9483-12248df7e5bc",
-  "version": 192,
-  "weekStart": "",
-  "id": null
+  "version": 199,
+  "weekStart": ""
 }

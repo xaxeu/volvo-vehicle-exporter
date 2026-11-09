@@ -22,9 +22,17 @@ def log(msg, level='info'):
 
 
 class VolvoAuth:
-    # OAuth2 endpoints
-    AUTH_URL = "https://volvoid.eu.volvocars.com/as/authorization.oauth2"
-    TOKEN_URL = "https://volvoid.eu.volvocars.com/as/token.oauth2"
+    # OAuth2 endpoints of the new Volvo ID service (Keycloak). Used for applications whose
+    # client_id starts with "vid-" (Volvo's announcement says "vid-dc-"; a real application
+    # came with "vid-dcr-").
+    AUTH_URL = "https://auth.volvocars.com/realms/volvocars/protocol/openid-connect/auth"
+    TOKEN_URL = "https://auth.volvocars.com/realms/volvocars/protocol/openid-connect/token"
+
+    # Legacy Volvo ID service, only for old "dc-" clients. Volvo shuts it down on
+    # 2027-01-31: after that delete these constants, `legacy_client` and its branches.
+    NEW_CLIENT_ID_PREFIX = "vid-"
+    LEGACY_AUTH_URL = "https://volvoid.eu.volvocars.com/as/authorization.oauth2"
+    LEGACY_TOKEN_URL = "https://volvoid.eu.volvocars.com/as/token.oauth2"
 
     # API Base URLs
     BASE_URL_CONNECTED_VEHICLE = "https://api.volvocars.com/connected-vehicle/v2"
@@ -45,8 +53,12 @@ class VolvoAuth:
             'Content-Type': 'application/json',
         })
         self.token_file = Path("volvo_token.json")
-        self.auth_url = self.AUTH_URL
-        self.token_url = self.TOKEN_URL
+        self.legacy_client = not str(self.config['client_id']).startswith(self.NEW_CLIENT_ID_PREFIX)
+        self.auth_url = self.LEGACY_AUTH_URL if self.legacy_client else self.AUTH_URL
+        self.token_url = self.LEGACY_TOKEN_URL if self.legacy_client else self.TOKEN_URL
+        if self.legacy_client:
+            log("WARNING: client_id does not start with 'vid-', so the LEGACY Volvo ID service is used. "
+                "It stops working on 2027-01-31: create a new application and migrate (see README).")
         self.code_verifier = secrets.token_urlsafe(64)[:self.PKCE_VERIFIER_LENGTH]
         self.code_challenge = self._pkce_challenge()
         self.state = secrets.token_urlsafe(32)
@@ -84,11 +96,25 @@ class VolvoAuth:
             except Exception as e:
                 log(f"Backup failed: {e}", 'error')
 
+    def _token_matches_client(self, token_data: Dict) -> bool:
+        """A token (and its refresh token) only works for the OAuth client it was issued to.
+
+        Token files written before client_id was recorded came from a legacy client.
+        """
+        stored = token_data.get('client_id')
+        if stored is None:
+            return self.legacy_client
+        return stored == self.config['client_id']
+
     def load_token(self) -> Optional[Dict]:
         if not self.token_file.exists():
             return None
         try:
             token_data = json.loads(self.token_file.read_text())
+            if not self._token_matches_client(token_data):
+                log("Token file was issued to a different OAuth client - backing it up, new login required")
+                self.invalidate_token()
+                return None
             if 'access_token' in token_data and time.time() < token_data.get('expires_at', 0):
                 self.session.headers['Authorization'] = f"Bearer {token_data['access_token']}"
                 log("Token loaded")
@@ -108,9 +134,35 @@ class VolvoAuth:
             token_data['expires_in'] -
             self.TOKEN_EXPIRY_SAFETY_MARGIN_SECONDS
         )
+        # A refresh token only works for the client it was issued to (see load_token)
+        token_data['client_id'] = self.config['client_id']
         self.token_file.write_text(json.dumps(token_data, indent=2))
         self.session.headers['Authorization'] = f"Bearer {token_data['access_token']}"
-        log("Token saved (new refresh_token stored)")
+        lifetimes = f"access token {token_data['expires_in']}s"
+        if 'refresh_expires_in' in token_data:
+            lifetimes += f", refresh token {token_data['refresh_expires_in']}s"
+        log(f"Token saved (new refresh_token stored; {lifetimes})")
+
+    def _post_token(self, data: Dict) -> requests.Response:
+        """POST a grant to the token endpoint.
+
+        The new service wants the client credentials in an HTTP Basic header, not in the
+        body. The legacy service keeps getting them in the body, exactly as before.
+        """
+        client_id = self.config['client_id']
+        client_secret = self.config['client_secret']
+        kwargs = {}
+        if self.legacy_client:
+            data = {**data, 'client_id': client_id, 'client_secret': client_secret}
+        else:
+            kwargs['auth'] = (str(client_id), str(client_secret))
+        return self.session.post(
+            self.token_url,
+            data=data,
+            headers={'Content-Type': 'application/x-www-form-urlencoded'},
+            timeout=self.REQUEST_TIMEOUT_SECONDS,
+            **kwargs,
+        )
 
     def refresh_token(self) -> bool:
         """Single refresh attempt – caller may wrap with retries"""
@@ -126,17 +178,10 @@ class VolvoAuth:
             log("Refreshing token...")
             refresh_data = {
                 'grant_type': 'refresh_token',
-                'client_id': self.config['client_id'],
-                'client_secret': self.config['client_secret'],
                 'refresh_token': token_data['refresh_token'],
             }
 
-            response = self.session.post(
-                self.token_url,
-                data=refresh_data,
-                headers={'Content-Type': 'application/x-www-form-urlencoded'},
-                timeout=self.REQUEST_TIMEOUT_SECONDS,
-            )
+            response = self._post_token(refresh_data)
 
             if response.status_code == 200:
                 new_token = response.json()
@@ -191,6 +236,10 @@ class VolvoAuth:
             f"&code_challenge_method=S256"
         )
 
+        if not self.legacy_client:
+            log("Tip: tick 'Remember me' on the Volvo ID login page. Without it the refresh token is "
+                "short-lived and the exporter loses access soon after login; with it the grant lasts "
+                "up to 3 months while it keeps being refreshed.")
         log(f"Open browser URL: {auth_url}")
         callback_url = input("Paste FULL callback URL: ").strip()
 
@@ -210,19 +259,12 @@ class VolvoAuth:
         log("Exchanging code + verifier + secret")
         token_data = {
             'grant_type': 'authorization_code',
-            'client_id': self.config['client_id'],
-            'client_secret': self.config['client_secret'],
             'code': code,
             'redirect_uri': redirect_uri_raw,
             'code_verifier': self.code_verifier,
         }
 
-        response = self.session.post(
-            self.token_url,
-            data=token_data,
-            headers={'Content-Type': 'application/x-www-form-urlencoded'},
-            timeout=self.REQUEST_TIMEOUT_SECONDS,
-        )
+        response = self._post_token(token_data)
 
         if response.status_code == 200:
             token = response.json()

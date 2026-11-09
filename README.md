@@ -109,12 +109,24 @@ Click on the 3 dots button and select "See agent details"
 ![Credentials](./pictures/credentials.png)
 
 3. Configure credentials in `config.yaml`:
-   - `client_id` - Volvo API application ID
+   - `client_id` - Volvo API application ID (starts with `vid-` for applications on the new Volvo ID service, see below)
    - `client_secret` - Volvo API application secret
    - `api_key` - Volvo VCC API key - Primary
    - `redirect_uri` - OAuth callback URL
    - `vin` - Vehicle VIN to monitor
    - `weather_api_key` - Optional weather service integration (OpenWeatherMap)
+
+## Migrating to the new Volvo ID service (deadline: 31 January 2027)
+
+Volvo ID is moving to a new OAuth 2.0 service ([announcement](https://developer.volvocars.com/news/volvoid-migration/)). OAuth clients whose Client ID starts with `dc-` stop working after **31 January 2027**. Clients on the new service have a Client ID starting with `vid-` (for example `vid-dc-...` or `vid-dcr-...`) and come with their own Client Secret and VCC API key. The exporter chooses the service from the `client_id` prefix, so an existing `dc-` setup keeps working until you switch.
+
+1. On your [account page](https://developer.volvocars.com/account/#your-api-applications) create and publish a **new application**, using the same redirect URI and scopes as before. Applications marked *Inactive* have to be recreated.
+2. In `config.yaml` replace `client_id`, `client_secret` and `api_key` with the new values. If the login page answers `invalid_scope`, remove the scopes your new application does not have from `scope`. The error message lists the whole requested scope string, not only the scope that is wrong. The exporter only uses the Connected Vehicle, Energy and Location APIs, so it needs no `exve:` (Extended Vehicle) scope and no `vehicle:attributes`.
+3. Stop the exporter (`docker-compose stop volvo-exporter`) and authenticate again as described in [First Time Setup](#first-time-setup-obtain-initial-token). The exporter notices that `volvo_token.json` was issued to another client, moves it to `volvo_token.json.bak` and asks for a new login. **Tick "Remember me"** on the Volvo ID login page: without it the refresh token is short-lived and the exporter loses access soon after login. With it the grant lasts up to 3 months while it keeps being refreshed, after which you have to log in again.
+4. Check the log for `Token saved (new refresh_token stored; access token ...s, refresh token ...s)` and that `http://localhost:9100/metrics` shows data.
+5. Delete the old application on the account page.
+
+Once the old service is gone, the `LEGACY_*` constants and the `legacy_client` branches in `auth.py` can be removed.
 
 ## Optional Integrations
 
@@ -214,7 +226,7 @@ All metrics are labeled with vehicle attributes for easy filtering and aggregati
 Uses OAuth2 with PKCE (Proof Key for Code Exchange) for secure authentication without exposing client secrets directly. The implementation:
 1. Generates a code verifier and challenge
 2. Redirects user to Volvo ID authorization
-3. Exchanges authorization code for access token
+3. Exchanges authorization code for access token (on the new service the client credentials go in an HTTP Basic header)
 4. Stores token locally with automatic refresh handling
 
 ## Monitoring with Grafana

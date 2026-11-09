@@ -10,6 +10,13 @@
 # ============================================================================
 # Volvo API Credentials
 # Get these from https://developer.volvocars.com/account/
+#
+# Volvo ID is moving to a new OAuth service. Applications created before the move have a
+# client_id starting with "dc-" and stop working on 31 January 2027. Applications created
+# on the new service have a client_id starting with "vid-" (for example "vid-dc-..." or
+# "vid-dcr-..."), plus their own client_secret and api_key. The exporter picks the service
+# from that prefix.
+# Migration steps: see "Migrating to the new Volvo ID service" in README.md
 # ============================================================================
 
 client_id: "YOUR_CLIENT_ID_HERE"
@@ -29,8 +36,11 @@ redirect_uri: "YOUR_URL_ENCODED_REDIRECT_URI_HERE"
 # NOTE: This value must be URL-encoded and match scopes selected in your Volvo application
 # Includes: fuel status, battery, doors/windows, locks, diagnostics, warnings, tires,
 # trip statistics, location, and energy data
-# Example: "exve:brake_status exve:diagnostics_engine_status" becomes "exve%3Abrake_status%20exve%3Adiagnostics_engine_status"
-scope: "exve%3Abrake_status%20exve%3Adiagnostics_engine_status%20exve%3Adiagnostics_workshop%20exve%3Adoors_status%20exve%3Aengine_status%20exve%3Afuel_status%20exve%3Alock_status%20exve%3Aodometer_status%20exve%3Atyre_status%20exve%3Avehicle_statistics%20exve%3Awarnings%20exve%3Awindows_status%20vehicle%3Aattributes%20conve%3Abattery_charge_level%20conve%3Abrake_status%20conve%3Aclimatization_start_stop%20conve%3Acommand_accessibility%20conve%3Acommands%20conve%3Aconnectivity_status%20conve%3Adiagnostics_engine_status%20conve%3Adiagnostics_workshop%20conve%3Adoors_status%20conve%3Aengine_start_stop%20conve%3Aengine_status%20conve%3Aenvironment%20conve%3Afuel_status%20conve%3Ahonk_flash%20conve%3Alock%20conve%3Alock_status%20conve%3Anavigation%20conve%3Aodometer_status%20conve%3Atrip_statistics%20conve%3Atyre_status%20conve%3Aunlock%20conve%3Avehicle_relation%20conve%3Awarnings%20conve%3Awindows_status%20location%3Aread%20energy%3Acapability%3Aread%20energy%3Astate%3Aread%20openid"
+# Example: "conve:odometer_status conve:engine_status" becomes "conve%3Aodometer_status%20conve%3Aengine_status"
+# If the Volvo ID login page answers "invalid_scope", remove the scopes your application does not have.
+# (Keycloak's error message lists the whole requested scope string, not only the scope that is wrong.)
+# The exporter only uses the Connected Vehicle, Energy and Location APIs: it needs no exve: (Extended Vehicle) scope.
+scope: "conve%3Abattery_charge_level%20conve%3Abrake_status%20conve%3Aclimatization_start_stop%20conve%3Acommand_accessibility%20conve%3Acommands%20conve%3Aconnectivity_status%20conve%3Adiagnostics_engine_status%20conve%3Adiagnostics_workshop%20conve%3Adoors_status%20conve%3Aengine_start_stop%20conve%3Aengine_status%20conve%3Aenvironment%20conve%3Afuel_status%20conve%3Ahonk_flash%20conve%3Alock%20conve%3Alock_status%20conve%3Anavigation%20conve%3Aodometer_status%20conve%3Atrip_statistics%20conve%3Atyre_status%20conve%3Aunlock%20conve%3Avehicle_relation%20conve%3Awarnings%20conve%3Awindows_status%20location%3Aread%20energy%3Acapability%3Aread%20energy%3Astate%3Aread%20openid"
 
 # ============================================================================
 # Vehicle Configuration
